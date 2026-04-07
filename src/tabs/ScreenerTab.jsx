@@ -142,6 +142,7 @@ export default function ScreenerTab() {
   const [stocksData, setStocksData] = useState({})
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
+  const [displayLimit, setDisplayLimit] = useState(25)
 
   // Filter state
   const [filterMarket, setFilterMarket] = useState('All')
@@ -175,8 +176,16 @@ export default function ScreenerTab() {
   }, [])
 
   // ── Get stocks to display ────────────────────────────────────────────
-  const stocks = useMemo(() => {
-    let result = allStocks.map(s => ({ ...s, ...stocksData[s.symbol] }))
+  const allFilteredStocks = useMemo(() => {
+    // Deduplicate by symbol (keep first occurrence)
+    const seen = new Set()
+    let result = allStocks
+      .map(s => ({ ...s, ...stocksData[s.symbol] }))
+      .filter(s => {
+        if (seen.has(s.symbol)) return false
+        seen.add(s.symbol)
+        return true
+      })
 
     // Apply market filter
     if (filterMarket !== 'All') {
@@ -259,6 +268,9 @@ export default function ScreenerTab() {
 
     return result
   }, [allStocks, stocksData, filterMarket, filterSector, filterDivYieldMin, filterDivYieldMax, filterPEMin, filterPEMax, filterMarketCap, sortBy, sortDesc])
+
+  // Limit displayed stocks — show 25 at a time
+  const stocks = useMemo(() => allFilteredStocks.slice(0, displayLimit), [allFilteredStocks, displayLimit])
 
   // ── Load initial stock list ──────────────────────────────────────────
   useEffect(() => {
@@ -360,6 +372,7 @@ export default function ScreenerTab() {
 
   // ── Quick preset filters ─────────────────────────────────────────────
   const applyPreset = useCallback(preset => {
+    setDisplayLimit(25)
     switch (preset) {
       case 'highDiv':
         setFilterDivYieldMin(4)
@@ -859,38 +872,34 @@ export default function ScreenerTab() {
         </table>
       </div>
 
-      {/* Footer — loading progress */}
-      {allStocks.length > 0 && (
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          {/* Progress bar */}
-          <div style={{ maxWidth: 300, margin: '0 auto 12px', background: 'var(--bg-muted)', borderRadius: 4, height: 4, overflow: 'hidden' }}>
-            <div style={{
-              width: `${(Object.keys(stocksData).length / allStocks.length) * 100}%`,
-              height: '100%', background: '#0A7C5C', borderRadius: 4,
-              transition: 'width 0.3s ease',
-            }} />
+      {/* Footer */}
+      <div style={{ marginTop: 16, textAlign: 'center' }}>
+        {fetching && (
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
+            Fetching prices...
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-            {Object.keys(stocksData).length} of {allStocks.length} stocks loaded
-          </div>
-          {fetching && (
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              Fetching prices...
-            </div>
-          )}
-          {!fetching && allStocks.filter(s => !stocksData[s.symbol]).length > 0 && (
-            <button onClick={loadMore}
-              style={{
-                padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                border: '1px solid var(--border)', background: 'var(--bg-card)',
-                color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s',
-              }}
-            >
-              Load more stocks ({allStocks.filter(s => !stocksData[s.symbol]).length} remaining)
-            </button>
-          )}
+        )}
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+          Showing {stocks.length} of {allFilteredStocks.length} results
         </div>
-      )}
+        {displayLimit < allFilteredStocks.length && (
+          <button
+            onClick={() => {
+              setDisplayLimit(prev => prev + 25)
+              // Fetch data for any new stocks that need it
+              const unfetched = allStocks.filter(s => !stocksData[s.symbol])
+              if (unfetched.length > 0) loadMore()
+            }}
+            style={{
+              padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 600,
+              border: '1px solid var(--border)', background: 'var(--bg-card)',
+              color: 'var(--text)', cursor: 'pointer', transition: 'all 0.15s',
+            }}
+          >
+            + Show 25 More
+          </button>
+        )}
+      </div>
     </div>
   )
 }

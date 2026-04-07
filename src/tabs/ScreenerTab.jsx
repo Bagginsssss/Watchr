@@ -788,7 +788,7 @@ export default function ScreenerTab() {
                     {hasData ? (
                       <div>{sym}{convert(data.price, stock.market).toFixed(2)}</div>
                     ) : (
-                      <div style={{ color: 'var(--text-muted)' }}>—</div>
+                      <div className="skeleton" style={{ width: 60, height: 14, borderRadius: 4 }} />
                     )}
                   </td>
 
@@ -799,7 +799,7 @@ export default function ScreenerTab() {
                         {isPositive ? '+' : ''}{formatPct(changePercent / 100)} ({formatNum(data.change, 2)})
                       </div>
                     ) : (
-                      <div style={{ color: 'var(--text-muted)' }}>—</div>
+                      <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 4 }} />
                     )}
                   </td>
 
@@ -808,18 +808,22 @@ export default function ScreenerTab() {
                     {hasData && data.marketCap ? (
                       formatMarketCap(convert(data.marketCap, stock.market), sym)
                     ) : (
-                      <div style={{ color: 'var(--text-muted)' }}>—</div>
+                      <div className="skeleton" style={{ width: 50, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
                     )}
                   </td>
 
                   {/* P/E Ratio */}
                   <td style={{ textAlign: 'right' }}>
-                    {hasData && data.pe ? formatNum(data.pe, 1) : <div style={{ color: 'var(--text-muted)' }}>—</div>}
+                    {hasData && data.pe ? formatNum(data.pe, 1) : (
+                      hasData ? <span style={{ color: 'var(--text-muted)' }}>—</span> : <div className="skeleton" style={{ width: 36, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
+                    )}
                   </td>
 
                   {/* Dividend Yield */}
                   <td style={{ textAlign: 'right', fontWeight: 600, color: data && data.divYield > 0 ? 'var(--green)' : 'var(--text)' }}>
-                    {hasData && data.divYield ? formatPct(data.divYield / 100) : <div style={{ color: 'var(--text-muted)' }}>—</div>}
+                    {hasData ? (data.divYield > 0 ? formatPct(data.divYield / 100) : <span style={{ color: 'var(--text-muted)' }}>—</span>) : (
+                      <div className="skeleton" style={{ width: 40, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
+                    )}
                   </td>
 
                   {/* 52-Week Range */}
@@ -827,7 +831,7 @@ export default function ScreenerTab() {
                     {hasData && data.high52w && data.low52w ? (
                       <WeekRange52 price={data.price} low={data.low52w} high={data.high52w} />
                     ) : (
-                      <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</div>
+                      <div className="skeleton" style={{ width: '100%', height: 14, borderRadius: 4 }} />
                     )}
                   </td>
 
@@ -855,24 +859,36 @@ export default function ScreenerTab() {
         </table>
       </div>
 
-      {/* Footer */}
-      {fetching && (
-        <div style={{ marginTop: 16, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 12 }}>
-          Loading data... {Object.keys(stocksData).length} / {allStocks.length} stocks
-        </div>
-      )}
-      {!fetching && allStocks.filter(s => !stocksData[s.symbol]).length > 0 && (
+      {/* Footer — loading progress */}
+      {allStocks.length > 0 && (
         <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <button onClick={loadMore}
-            style={{
-              padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-              border: '1px solid var(--border)', background: 'var(--bg-card)',
-              color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s',
-            }}
-
-          >
-            Load more stocks ({allStocks.filter(s => !stocksData[s.symbol]).length} remaining)
-          </button>
+          {/* Progress bar */}
+          <div style={{ maxWidth: 300, margin: '0 auto 12px', background: 'var(--bg-muted)', borderRadius: 4, height: 4, overflow: 'hidden' }}>
+            <div style={{
+              width: `${(Object.keys(stocksData).length / allStocks.length) * 100}%`,
+              height: '100%', background: '#0A7C5C', borderRadius: 4,
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+            {Object.keys(stocksData).length} of {allStocks.length} stocks loaded
+          </div>
+          {fetching && (
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+              Fetching prices...
+            </div>
+          )}
+          {!fetching && allStocks.filter(s => !stocksData[s.symbol]).length > 0 && (
+            <button onClick={loadMore}
+              style={{
+                padding: '10px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                border: '1px solid var(--border)', background: 'var(--bg-card)',
+                color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s',
+              }}
+            >
+              Load more stocks ({allStocks.filter(s => !stocksData[s.symbol]).length} remaining)
+            </button>
+          )}
         </div>
       )}
     </div>

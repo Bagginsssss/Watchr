@@ -946,12 +946,46 @@ export default function CalendarTab({ user }) {
           )}
 
           {filterType !== 'earnings' && (
-            <DividendSummary
-              events={monthEvents}
-              currency={currency}
-              convert={convert}
-              sym={sym}
-            />
+            <>
+              {/* Annual Dividend Total */}
+              {(() => {
+                const year = selectedMonth.getFullYear()
+                const yearEvents = allEvents.filter(e => e.type === 'dividend' && e.date.getFullYear() === year && e.isInPortfolio && e.expectedPayout > 0)
+                const annualTotal = yearEvents.reduce((sum, e) => {
+                  const native = e.market === 'TSX' ? 'CAD' : 'USD'
+                  return sum + convert(e.expectedPayout, native)
+                }, 0)
+                if (annualTotal <= 0) return null
+                const monthlyAvg = annualTotal / 12
+                return (
+                  <div style={{
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    borderRadius: 12, padding: 20, marginBottom: 16,
+                  }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {year} Fiscal Year Dividend Income
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8 }}>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: '#0A7C5C', fontFamily: "'IBM Plex Mono', monospace" }}>
+                        {sym}{formatNum(annualTotal, 2)}
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                        ~{sym}{formatNum(monthlyAvg, 2)}/mo
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      From {yearEvents.length} dividend payment{yearEvents.length !== 1 ? 's' : ''} across your portfolio
+                    </div>
+                  </div>
+                )
+              })()}
+              <DividendSummary
+                events={monthEvents}
+                currency={currency}
+                convert={convert}
+                sym={sym}
+              />
+            </>
           )}
         </div>
 

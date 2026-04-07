@@ -377,8 +377,7 @@ export default function CryptoTab() {
                   borderBottom: '1px solid var(--border)', cursor: 'pointer',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-muted)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+>
                 <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 20 }}>{i + 1}</span>
                 {coin.image && <img src={coin.image} width={24} height={24} style={{ borderRadius: '50%' }} onError={e => e.target.style.display = 'none'} />}
                 <div style={{ flex: 1 }}>

@@ -680,14 +680,7 @@ function MarketNews() {
               animation: 'fadeInUp 0.5s ease-out forwards',
               cursor: 'pointer',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-hover)'
-              e.currentTarget.style.background = 'var(--bg-hover)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border)'
-              e.currentTarget.style.background = 'var(--bg-card)'
-            }}
+
           >
             {article.thumbnail && (
               <img
@@ -762,14 +755,7 @@ function QuickActions() {
         justifyContent: 'center',
         gap: 8,
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-hover)'
-        e.currentTarget.style.background = 'var(--bg-hover)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border)'
-        e.currentTarget.style.background = 'var(--bg-card)'
-      }}
+
     >
       <span style={{ fontSize: 16 }}>{icon}</span>
       {label}

@@ -7,9 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node server.prod.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "ios:dev": "npx cap run ios"
   },
   "dependencies": {
+    "@capacitor/browser": "^8.0.3",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@supabase/supabase-js": "^2.100.0",
     "express": "^5.2.1",
     "http-proxy-middleware": "^3.0.5",
@@ -21,6 +30,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^6.0.2",
     "vite": "^5.4.2"
   }
 }

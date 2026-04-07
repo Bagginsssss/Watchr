@@ -46,8 +46,7 @@ function CalendarDay({ date, isCurrentMonth, isToday, isSelected, events, onDayC
         fontWeight: isToday || isSelected ? 600 : 500,
         color: isToday ? 'var(--green)' : 'var(--text)',
       }}
-      onMouseEnter={e => { if (hasEvents && !isSelected) e.currentTarget.style.backgroundColor = 'var(--bg-hover)' }}
-      onMouseLeave={e => { if (!isSelected) e.currentTarget.style.backgroundColor = isToday ? 'var(--green-bg)' : isCurrentMonth ? 'var(--bg-card)' : 'var(--bg-muted)' }}
+
     >
       <span>{date.getDate()}</span>
       {hasEvents && (

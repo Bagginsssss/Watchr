@@ -869,8 +869,7 @@ export default function ScreenerTab() {
               border: '1px solid var(--border)', background: 'var(--bg-card)',
               color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#0A7C5C'; e.currentTarget.style.color = '#0A7C5C' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)' }}
+
           >
             Load more stocks ({allStocks.filter(s => !stocksData[s.symbol]).length} remaining)
           </button>

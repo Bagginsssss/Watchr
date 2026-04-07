@@ -5,3 +5,10 @@ dist
 .env.*.local
 *.log
 package-lock 2.json
+
+# Capacitor / iOS
+ios/Pods/
+ios/.idea/
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.ipa

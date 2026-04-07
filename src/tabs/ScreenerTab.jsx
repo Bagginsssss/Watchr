@@ -275,7 +275,7 @@ export default function ScreenerTab() {
   // Only fetch metrics for stocks that are visible (first 30 + as user scrolls)
   const [fetchedCount, setFetchedCount] = useState(0)
   const BATCH_SIZE = 10
-  const INITIAL_LOAD = 30
+  const INITIAL_LOAD = 25
 
   const fetchMoreStocks = useCallback(async (stockList) => {
     if (stockList.length === 0) return
@@ -325,16 +325,16 @@ export default function ScreenerTab() {
     if (allStocks.length === 0) return
     const toFetch = allStocks.filter(s => !stocksData[s.symbol]).slice(0, INITIAL_LOAD)
     if (toFetch.length > 0) {
-      fetchMoreStocks(toFetch).then(() => setFetchedCount(INITIAL_LOAD))
+      fetchMoreStocks(toFetch).then(() => setFetchedCount(prev => prev + toFetch.length))
     }
   }, [allStocks.length])
 
   // Load more when user scrolls to bottom
   const loadMore = useCallback(() => {
     const unfetched = allStocks.filter(s => !stocksData[s.symbol])
-    const nextBatch = unfetched.slice(0, 20)
+    const nextBatch = unfetched.slice(0, 25)
     if (nextBatch.length > 0) {
-      fetchMoreStocks(nextBatch).then(() => setFetchedCount(prev => prev + 20))
+      fetchMoreStocks(nextBatch).then(() => setFetchedCount(prev => prev + nextBatch.length))
     }
   }, [allStocks, stocksData, fetchMoreStocks])
 

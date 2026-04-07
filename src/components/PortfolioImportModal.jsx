@@ -100,7 +100,7 @@ export default function PortfolioImportModal({ onClose, onImport }) {
       }
 
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        setError('No holdings detected in this image. Try a clearer screenshot of your portfolio.')
+        setError('No holdings found. Please use a clearer screenshot showing your stock symbols, share counts, and cost basis.')
         setAnalyzing(false)
         return
       }
@@ -135,7 +135,14 @@ export default function PortfolioImportModal({ onClose, onImport }) {
         setResults([...items]) // trigger re-render after each validation
       }
     } catch (err) {
-      setError(err.message || 'Failed to analyze image')
+      const msg = err.message || ''
+      if (msg.includes('parse') || msg.includes('JSON')) {
+        setError('Could not read the holdings from this image. Please try a clearer screenshot where stock symbols and numbers are fully visible.')
+      } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed')) {
+        setError('Something went wrong connecting to the AI. Please check your connection and try again.')
+      } else {
+        setError('Could not analyze this image. Please try a different screenshot with your holdings clearly visible.')
+      }
     } finally {
       setAnalyzing(false)
     }
@@ -159,7 +166,7 @@ export default function PortfolioImportModal({ onClose, onImport }) {
       await onImport(toImport)
       onClose()
     } catch (err) {
-      setError('Failed to save: ' + (err.message || 'Unknown error'))
+      setError('Failed to save holdings. Please try again.')
     } finally {
       setImporting(false)
     }
@@ -169,17 +176,18 @@ export default function PortfolioImportModal({ onClose, onImport }) {
 
   return (
     <>
-      <div onClick={onClose} style={{
+      <div className="modal-overlay" onClick={onClose} style={{
         position: 'fixed', inset: 0, zIndex: 9998,
         background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-      }} />
-      <div style={{
+      }}>
+      <div className="modal-panel" onClick={e => e.stopPropagation()} style={{
         position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         zIndex: 9999, width: '100%', maxWidth: 640, maxHeight: '90vh', overflowY: 'auto',
         background: 'var(--bg-card)', borderRadius: 16,
         border: '1px solid var(--border)',
         boxShadow: '0 24px 48px rgba(0,0,0,0.3)',
       }}>
+        <div className="sheet-handle" />
         {/* Header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -439,6 +447,7 @@ export default function PortfolioImportModal({ onClose, onImport }) {
             </>
           )}
         </div>
+      </div>
       </div>
     </>
   )

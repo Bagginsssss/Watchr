@@ -801,6 +801,7 @@ export default function PortfolioTab({ user }) {
   const [showImportModal, setShowImportModal] = useState(false)
   const [showBrokerageImport, setShowBrokerageImport] = useState(false)
   const [showBenchmark, setShowBenchmark] = useState(false)
+  const [showImportMenu, setShowImportMenu] = useState(false)
   const [editingHolding, setEditingHolding] = useState(null)
   // Compare mode
   const [compareMode, setCompareMode] = useState(false)
@@ -1241,7 +1242,7 @@ create policy "Users manage own holdings"
                 </select>
               </div>
             </div>
-            <div className="portfolio-header-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div className="portfolio-header-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button
                 onClick={() => setShowBenchmark(b => !b)}
                 title="Compare portfolio performance vs index"
@@ -1250,43 +1251,78 @@ create policy "Users manage own holdings"
                   border: `1px solid ${showBenchmark ? 'var(--green)' : 'var(--border)'}`,
                   borderRadius: 8,
                   color: showBenchmark ? 'var(--green)' : 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
-                  padding: '0 14px', height: 38, cursor: 'pointer',
+                  padding: '0 14px', height: 36, cursor: 'pointer',
                   transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5,
+                  display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
                 }}
               >
                 📊 Benchmark
               </button>
-              <button
-                onClick={() => setShowBrokerageImport(true)}
-                title="Import from Wealthsimple or Questrade"
-                style={{
-                  background: 'var(--bg-muted)', border: '1px solid var(--border)', borderRadius: 8,
-                  color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
-                  padding: '0 14px', height: 38, cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#0A7C5C'; e.currentTarget.style.color = '#0A7C5C' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)' }}
-              >
-                🏦 Brokerage Import
-              </button>
-              <button
-                onClick={() => setShowImportModal(true)}
-                title="Import holdings from a screenshot"
-                style={{
-                  background: 'var(--bg-muted)', border: '1px solid var(--border)', borderRadius: 8,
-                  color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
-                  padding: '0 14px', height: 38, cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  display: 'flex', alignItems: 'center', gap: 5,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#0A7C5C'; e.currentTarget.style.color = '#0A7C5C' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)' }}
-              >
-                📸 Import
-              </button>
+              {/* Import dropdown */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowImportMenu(v => !v)}
+                  style={{
+                    background: 'var(--bg-muted)', border: '1px solid var(--border)', borderRadius: 8,
+                    color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
+                    padding: '0 14px', height: 36, cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
+                  }}
+                >
+                  ↓ Import
+                  <span style={{ fontSize: 10, opacity: 0.6 }}>▾</span>
+                </button>
+                {showImportMenu && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setShowImportMenu(false)} />
+                    <div style={{
+                      position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 50,
+                      background: 'var(--bg-card)', border: '1px solid var(--border)',
+                      borderRadius: 10, boxShadow: 'var(--shadow-lg)',
+                      minWidth: 200, overflow: 'hidden',
+                    }}>
+                      <button
+                        onClick={() => { setShowImportMenu(false); setShowBrokerageImport(true) }}
+                        style={{
+                          width: '100%', background: 'none', border: 'none',
+                          padding: '12px 16px', textAlign: 'left', cursor: 'pointer',
+                          color: 'var(--text)', fontSize: 13, fontWeight: 500,
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          borderBottom: '1px solid var(--border)',
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 16 }}>🏦</span>
+                        <div>
+                          <div>Brokerage Import</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Wealthsimple, Questrade</div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => { setShowImportMenu(false); setShowImportModal(true) }}
+                        style={{
+                          width: '100%', background: 'none', border: 'none',
+                          padding: '12px 16px', textAlign: 'left', cursor: 'pointer',
+                          color: 'var(--text)', fontSize: 13, fontWeight: 500,
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 16 }}>📸</span>
+                        <div>
+                          <div>Screenshot Import</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>Paste or upload a screenshot</div>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
               {rows.length > 0 && (
                 <button
                   onClick={exportCSV}
@@ -1294,13 +1330,11 @@ create policy "Users manage own holdings"
                   style={{
                     background: 'var(--bg-muted)', border: '1px solid var(--border)', borderRadius: 8,
                     color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500,
-                    padding: '0 14px', height: 38, cursor: 'pointer',
-                    transition: 'all 0.15s',
+                    padding: '0 14px', height: 36, cursor: 'pointer',
+                    transition: 'all 0.15s', whiteSpace: 'nowrap',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-hover)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                 >
-                  Export CSV
+                  Export
                 </button>
               )}
               <button
@@ -1308,14 +1342,12 @@ create policy "Users manage own holdings"
                 style={{
                   background: '#0A7C5C', border: 'none', borderRadius: 8,
                   color: '#FFFFFF', fontSize: 13, fontWeight: 600,
-                  padding: '0 20px', height: 38, cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  padding: '0 18px', height: 36, cursor: 'pointer',
+                  transition: 'all 0.15s', whiteSpace: 'nowrap',
                   boxShadow: '0 2px 8px rgba(10,124,92,0.25)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#08664B'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#0A7C5C'; e.currentTarget.style.transform = 'translateY(0)' }}
               >
-                + Add Holding
+                + Add
               </button>
             </div>
           </div>

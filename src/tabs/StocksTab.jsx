@@ -789,17 +789,15 @@ export default function StocksTab({ user, username, onRequestAuth, onCreateAlert
           return (
             <button key={id} onClick={() => switchMarket(id)}
               style={{
-                background: active ? 'var(--text)' : 'var(--bg-card)',
+                background: active ? '#0A7C5C' : 'var(--bg-card)',
                 border: active ? 'none' : '1px solid var(--border)',
                 borderRadius: 20,
                 color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                fontSize: 12, fontWeight: active ? 500 : 400,
+                fontSize: 12, fontWeight: active ? 600 : 400,
                 padding: '6px 14px', cursor: 'pointer',
                 transition: 'all 0.15s',
                 display: 'flex', alignItems: 'center', gap: 6,
               }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = 'var(--text)'; e.currentTarget.style.color = 'var(--text)' } }}
-              onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
             >
               <span>{m.flag}</span> {m.name}
             </button>
@@ -812,17 +810,15 @@ export default function StocksTab({ user, username, onRequestAuth, onCreateAlert
             switchMarket('WATCHLIST')
           }}
           style={{
-            background: isWatchlist ? 'var(--text)' : 'var(--bg-card)',
+            background: isWatchlist ? '#0A7C5C' : 'var(--bg-card)',
             border: isWatchlist ? 'none' : '1px solid var(--border)',
             borderRadius: 20,
             color: isWatchlist ? '#FFFFFF' : 'var(--text-secondary)',
-            fontSize: 12, fontWeight: isWatchlist ? 500 : 400,
+            fontSize: 12, fontWeight: isWatchlist ? 600 : 400,
             padding: '6px 14px', cursor: 'pointer',
             transition: 'all 0.15s',
             display: 'flex', alignItems: 'center', gap: 6,
           }}
-          onMouseEnter={e => { if (!isWatchlist) { e.currentTarget.style.borderColor = 'var(--text)'; e.currentTarget.style.color = 'var(--text)' } }}
-          onMouseLeave={e => { if (!isWatchlist) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
         >
           {'\u2605'} {username ? `${username}'s Watchlist` : 'Watchlist'}
         </button>

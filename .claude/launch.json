@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "watchr-mobile-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd mobile && npx expo start --web --port 8082"],
+      "port": 8082,
+      "autoPort": false
+    }
+  ]
+}

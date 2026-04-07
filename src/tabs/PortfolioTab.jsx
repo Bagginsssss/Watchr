@@ -917,27 +917,11 @@ export default function PortfolioTab({ user }) {
     }
   }, [holdings])
 
-  // Sync a holding to the watchlist (so it shows in the Stocks tab watchlist)
-  async function syncToWatchlist(symbol, name, sector) {
-    if (!supabaseReady || !user) return
-    try {
-      await supabase.from('watchlists').upsert({
-        user_id: user.id,
-        symbol,
-        name: name || symbol,
-        sector: sector || '',
-        position: 0,
-      }, { onConflict: 'user_id,symbol' })
-    } catch {}
-  }
-
   async function handleSave(data) {
     if (editingHolding) {
       await supabase.from('holdings').update({ ...data, updated_at: new Date().toISOString() }).eq('id', editingHolding.id)
     } else {
       await supabase.from('holdings').insert({ ...data, user_id: user.id })
-      // Auto-add to watchlist
-      syncToWatchlist(data.symbol, data.name)
     }
     setShowAddModal(false)
     setEditingHolding(null)
@@ -947,10 +931,6 @@ export default function PortfolioTab({ user }) {
   async function handleSaveMultiple(items) {
     const inserts = items.map(d => ({ ...d, user_id: user.id }))
     await supabase.from('holdings').insert(inserts)
-    // Auto-add all to watchlist
-    for (const item of items) {
-      syncToWatchlist(item.symbol, item.name)
-    }
     setShowAddModal(false)
     setEditingHolding(null)
     fetchHoldings()

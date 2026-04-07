@@ -734,25 +734,14 @@ function MarketNews() {
    Quick Actions Bar
    ──────────────────────────────────────────────────────────────────── */
 function QuickActions() {
-  const handleAddToWatchlist = () => {
-    sessionStorage.setItem('_dashboardAction', 'addToWatchlist')
-    window.dispatchEvent(new CustomEvent('dashboardAction', { detail: 'addToWatchlist' }))
+  const switchTab = (tab) => {
+    window.dispatchEvent(new CustomEvent('watchr:switch-tab', { detail: { tab } }))
   }
 
-  const handleSetAlert = () => {
-    sessionStorage.setItem('_dashboardAction', 'setAlert')
-    window.dispatchEvent(new CustomEvent('dashboardAction', { detail: 'setAlert' }))
-  }
-
-  const handleScreenStocks = () => {
-    sessionStorage.setItem('_dashboardAction', 'screenStocks')
-    window.dispatchEvent(new CustomEvent('dashboardAction', { detail: 'screenStocks' }))
-  }
-
-  const handleViewPortfolio = () => {
-    sessionStorage.setItem('_dashboardAction', 'viewPortfolio')
-    window.dispatchEvent(new CustomEvent('dashboardAction', { detail: 'viewPortfolio' }))
-  }
+  const handleAddToWatchlist = () => switchTab('stocks')
+  const handleSetAlert = () => switchTab('stocks')
+  const handleScreenStocks = () => switchTab('screener')
+  const handleViewPortfolio = () => switchTab('portfolio')
 
   const ActionButton = ({ label, onClick, icon }) => (
     <button

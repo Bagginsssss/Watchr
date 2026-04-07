@@ -127,6 +127,9 @@ input::placeholder {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 body {
@@ -140,13 +143,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-variant-numeric: tabular-nums;
   overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+#root {
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
 }
-
-#root { min-height: 100vh; }
 
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; }

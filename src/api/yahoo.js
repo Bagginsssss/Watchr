@@ -188,6 +188,51 @@ export const searchSymbol = withCache(
   _searchSymbol
 )
 
+/**
+ * Bulk fetch quotes for multiple symbols in a SINGLE API call.
+ * Returns a Map of symbol → { price, prevClose, change, changePct, marketCap, pe, divYield, high52w, low52w }
+ */
+export async function fetchQuotesBulk(symbols) {
+  if (!symbols || symbols.length === 0) return {}
+  const valid = symbols.filter(s => VALID_SYMBOL.test(s))
+  if (valid.length === 0) return {}
+
+  const res = await fetch(`${BASE}/v7/finance/quote?symbols=${valid.map(encodeURIComponent).join(',')}`)
+  if (!res.ok) throw new Error(`Bulk quote failed: ${res.status}`)
+  const json = await res.json()
+  const results = json.quoteResponse?.result ?? []
+
+  const map = {}
+  for (const q of results) {
+    const price = q.regularMarketPrice
+    const prevClose = q.regularMarketPreviousClose
+    map[q.symbol] = {
+      price,
+      prevClose,
+      change: price - (prevClose || price),
+      changePct: q.regularMarketChangePercent ?? 0,
+      marketCap: q.marketCap,
+      pe: q.trailingPE,
+      divYield: q.trailingAnnualDividendYield ? q.trailingAnnualDividendYield * 100 : 0,
+      high52w: q.fiftyTwoWeekHigh,
+      low52w: q.fiftyTwoWeekLow,
+      volume: q.regularMarketVolume,
+      currency: q.currency ?? 'USD',
+      exchange: q.exchange,
+      name: q.longName || q.shortName || q.symbol,
+    }
+    // Also populate the quote cache so individual fetchQuote calls are instant
+    quoteCache.set(`quote:${q.symbol}`, {
+      price,
+      prevClose,
+      currency: q.currency ?? 'USD',
+      exchange: q.fullExchangeName || q.exchange,
+      marketState: q.marketState,
+    })
+  }
+  return map
+}
+
 /** Force-refresh a quote (bypass cache). */
 export async function refreshQuote(symbol) {
   quoteCache.invalidate(`quote:${symbol}`)

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { fetchQuote, fetchMetrics, fetchLogoUrl, searchSymbol } from '../api/yahoo.js'
+import { fetchQuote, fetchMetrics, fetchLogoUrl, searchSymbol, fetchQuotesBulk } from '../api/yahoo.js'
 import { MARKETS, MARKET_LIST } from '../data/stocks.js'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 import { formatMarketCap, formatVolume, formatPct, formatNum } from '../utils/format.js'
@@ -454,56 +454,46 @@ export default function ScreenerTab() {
 
   const displayedStocks = useMemo(() => filteredStocks.slice(0, displayLimit), [filteredStocks, displayLimit])
 
-  // ── Fast batch fetch — quotes first, metrics in background ───────────
+  // ── Bulk fetch — single API call for all stocks ──────────────────────
   const fetchBatch = useCallback(async (stocks) => {
     if (stocks.length === 0) return
     setFetching(true)
 
-    // Phase 1: Fetch all quotes in parallel (fast — just price data)
-    const quoteResults = await Promise.allSettled(
-      stocks.map(s => fetchQuote(s.symbol))
-    )
+    try {
+      // ONE request for all symbols — price, P/E, div yield, market cap, 52w range
+      const symbols = stocks.map(s => s.symbol)
+      const bulkData = await fetchQuotesBulk(symbols)
 
-    // Update state immediately with price data
-    setStocksData(prev => {
-      const next = { ...prev }
-      stocks.forEach((s, i) => {
-        if (quoteResults[i].status === 'fulfilled') {
-          const quote = quoteResults[i].value
-          next[s.symbol] = {
-            ...(prev[s.symbol] || {}),
-            price: quote.price,
-            prevClose: quote.prevClose,
-            change: quote.price - (quote.prevClose || quote.price),
-          }
-        }
+      setStocksData(prev => {
+        const next = { ...prev }
+        Object.entries(bulkData).forEach(([symbol, data]) => {
+          next[symbol] = data
+        })
+        return next
       })
-      return next
-    })
+    } catch (err) {
+      console.error('Bulk fetch failed, falling back to individual:', err)
+      // Fallback: fetch individually
+      const quoteResults = await Promise.allSettled(
+        stocks.map(s => fetchQuote(s.symbol))
+      )
+      setStocksData(prev => {
+        const next = { ...prev }
+        stocks.forEach((s, i) => {
+          if (quoteResults[i].status === 'fulfilled') {
+            const quote = quoteResults[i].value
+            next[s.symbol] = {
+              ...(prev[s.symbol] || {}),
+              price: quote.price,
+              prevClose: quote.prevClose,
+              change: quote.price - (quote.prevClose || quote.price),
+            }
+          }
+        })
+        return next
+      })
+    }
     setFetching(false)
-
-    // Phase 2: Fetch metrics in background (slower — P/E, div yield, etc.)
-    const metricsResults = await Promise.allSettled(
-      stocks.map(s => fetchMetrics(s.symbol))
-    )
-
-    setStocksData(prev => {
-      const next = { ...prev }
-      stocks.forEach((s, i) => {
-        if (metricsResults[i].status === 'fulfilled') {
-          const metrics = metricsResults[i].value
-          next[s.symbol] = {
-            ...(next[s.symbol] || {}),
-            marketCap: metrics.marketCap,
-            pe: metrics.trailingPE,
-            divYield: metrics.dividendYield ? metrics.dividendYield * 100 : 0,
-            high52w: metrics.high52w,
-            low52w: metrics.low52w,
-          }
-        }
-      })
-      return next
-    })
   }, [])
 
   // ── Auto-fetch when market/sector changes ────────────────────────────

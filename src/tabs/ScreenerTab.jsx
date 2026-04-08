@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { fetchQuote, fetchMetrics, fetchLogoUrl } from '../api/yahoo.js'
+import { fetchQuote, fetchMetrics, fetchLogoUrl, searchSymbol } from '../api/yahoo.js'
 import { MARKETS, MARKET_LIST } from '../data/stocks.js'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 import { formatMarketCap, formatVolume, formatPct, formatNum } from '../utils/format.js'
@@ -117,7 +117,7 @@ function WeekRange52({ price, low, high }) {
 function StockSkeleton() {
   return (
     <tr style={{ borderBottom: '1px solid var(--border)' }}>
-      {[1, 2, 3, 4, 5, 6, 7].map(i => (
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
         <td key={i} style={{ padding: '12px 16px' }}>
           <div
             style={{
@@ -133,27 +133,204 @@ function StockSkeleton() {
   )
 }
 
+/* ── Search Detail Card ──────────────────────────────────────────────── */
+function SearchDetailCard({ result, onAddWatchlist, isInWatchlist }) {
+  const { currency, convert, sym } = useCurrency()
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    Promise.all([fetchQuote(result.symbol), fetchMetrics(result.symbol)])
+      .then(([quote, metrics]) => {
+        if (cancelled) return
+        setData({ quote, metrics })
+        setLoading(false)
+      })
+      .catch(err => {
+        if (cancelled) return
+        setError(err.message)
+        setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [result.symbol])
+
+  if (loading) {
+    return (
+      <div style={{
+        background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16,
+        padding: 24, marginTop: 12, animation: 'pulse 2s infinite',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--bg-hover)' }} />
+          <div>
+            <div style={{ width: 120, height: 20, borderRadius: 4, background: 'var(--bg-hover)', marginBottom: 6 }} />
+            <div style={{ width: 200, height: 14, borderRadius: 4, background: 'var(--bg-hover)' }} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16,
+        padding: 24, marginTop: 12, color: 'var(--text-muted)', textAlign: 'center',
+      }}>
+        Failed to load data for {result.symbol}
+      </div>
+    )
+  }
+
+  const { quote, metrics } = data
+  const change = quote.price - (quote.prevClose || quote.price)
+  const changePct = quote.prevClose ? (change / quote.prevClose) * 100 : 0
+  const isPositive = changePct >= 0
+
+  const statItems = [
+    { label: 'Market Cap', value: metrics.marketCap ? formatMarketCap(metrics.marketCap, sym) : '—' },
+    { label: 'P/E', value: metrics.trailingPE ? formatNum(metrics.trailingPE, 1) : '—' },
+    { label: 'Forward P/E', value: metrics.forwardPE ? formatNum(metrics.forwardPE, 1) : '—' },
+    { label: 'Div Yield', value: metrics.dividendYield ? formatPct(metrics.dividendYield) : '—' },
+    { label: 'Beta', value: metrics.beta ? formatNum(metrics.beta, 2) : '—' },
+    { label: '52W High', value: metrics.high52w ? `${sym}${formatNum(metrics.high52w, 2)}` : '—' },
+    { label: '52W Low', value: metrics.low52w ? `${sym}${formatNum(metrics.low52w, 2)}` : '—' },
+    { label: 'Volume', value: metrics.volume ? formatVolume(metrics.volume) : '—' },
+  ]
+
+  return (
+    <div style={{
+      background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16,
+      padding: 24, marginTop: 12,
+    }}>
+      {/* Header: Logo + Symbol + Name + Exchange */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+        <LogoAvatar symbol={result.symbol} size={48} />
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>
+              {displaySymbolText(result.symbol)}
+            </span>
+            <span style={{
+              fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
+              background: 'var(--bg-muted)', color: 'var(--text-secondary)',
+            }}>
+              {result.exchange}
+            </span>
+            {result.type && result.type !== 'EQUITY' && (
+              <span style={{
+                fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
+                background: '#8B5CF615', color: '#8B5CF6',
+              }}>
+                {result.type}
+              </span>
+            )}
+          </div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 2 }}>
+            {result.name}
+          </div>
+        </div>
+      </div>
+
+      {/* Price Row */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
+        <span style={{
+          fontSize: 32, fontWeight: 700, color: 'var(--text)',
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}>
+          {sym}{formatNum(quote.price, 2)}
+        </span>
+        <span style={{
+          fontSize: 15, fontWeight: 600, color: isPositive ? 'var(--green)' : 'var(--red)',
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}>
+          {isPositive ? '+' : ''}{formatNum(change, 2)}
+        </span>
+        <span style={{
+          fontSize: 13, fontWeight: 600, padding: '4px 10px', borderRadius: 8,
+          background: isPositive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+          color: isPositive ? 'var(--green)' : 'var(--red)',
+        }}>
+          {isPositive ? '+' : ''}{changePct.toFixed(2)}%
+        </span>
+      </div>
+
+      {/* Stats Grid */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+        gap: 12, marginBottom: 20,
+      }}>
+        {statItems.map(item => (
+          <div key={item.label} style={{
+            padding: '10px 14px', background: 'var(--bg)', borderRadius: 10,
+            border: '1px solid var(--border)',
+          }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
+              {item.label}
+            </div>
+            <div style={{
+              fontSize: 15, fontWeight: 600, color: 'var(--text)',
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}>
+              {item.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add to Watchlist */}
+      <button
+        onClick={() => onAddWatchlist(result.symbol)}
+        style={{
+          padding: '12px 24px', borderRadius: 10, fontSize: 14, fontWeight: 600,
+          border: '1px solid var(--border)', cursor: 'pointer',
+          background: isInWatchlist ? 'var(--bg-muted)' : 'var(--bg-card)',
+          color: isInWatchlist ? 'var(--text-secondary)' : 'var(--text)',
+          transition: 'all 0.15s', width: '100%',
+        }}
+      >
+        {isInWatchlist ? '★ In Watchlist' : '☆ Add to Watchlist'}
+      </button>
+    </div>
+  )
+}
+
 /* ── Main Screener Tab ───────────────────────────────────────────────── */
 export default function ScreenerTab() {
   const { currency, convert, sym } = useCurrency()
 
-  // ── State ────────────────────────────────────────────────────────────
+  // ── Search State ──────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [selectedResult, setSelectedResult] = useState(null)
+
+  // ── Screener State ────────────────────────────────────────────────────
   const [allStocks, setAllStocks] = useState([])
   const [stocksData, setStocksData] = useState({})
-  const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [displayLimit, setDisplayLimit] = useState(25)
 
   // Filter state
   const [filterMarket, setFilterMarket] = useState('All')
   const [filterSector, setFilterSector] = useState('All')
+  const [sortBy, setSortBy] = useState('name')
+  const [sortDesc, setSortDesc] = useState(false)
+
+  // Advanced filters
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [filterDivYieldMin, setFilterDivYieldMin] = useState(0)
   const [filterDivYieldMax, setFilterDivYieldMax] = useState(15)
   const [filterPEMin, setFilterPEMin] = useState(0)
   const [filterPEMax, setFilterPEMax] = useState(100)
   const [filterMarketCap, setFilterMarketCap] = useState('All')
-  const [sortBy, setSortBy] = useState('name')
-  const [sortDesc, setSortDesc] = useState(false)
 
   // Watchlist
   const [watchlist, setWatchlist] = useState(() => {
@@ -163,6 +340,35 @@ export default function ScreenerTab() {
       return []
     }
   })
+
+  // ── Search with debounce ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setSearchOpen(false)
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const results = await searchSymbol(searchQuery.trim())
+        setSearchResults(results)
+        setSearchOpen(true)
+      } catch {
+        setSearchResults([])
+      }
+      setSearchLoading(false)
+    }, 300)
+
+    return () => clearTimeout(timeout)
+  }, [searchQuery])
+
+  const handleSearchResultClick = useCallback((result) => {
+    setSelectedResult(result)
+    setSearchOpen(false)
+    setSearchQuery(result.symbol)
+  }, [])
 
   // ── Get all available sectors ────────────────────────────────────────
   const allSectors = useMemo(() => {
@@ -177,7 +383,6 @@ export default function ScreenerTab() {
 
   // ── Get stocks to display ────────────────────────────────────────────
   const allFilteredStocks = useMemo(() => {
-    // Deduplicate by symbol (keep first occurrence)
     const seen = new Set()
     let result = allStocks
       .map(s => ({ ...s, ...stocksData[s.symbol] }))
@@ -187,80 +392,56 @@ export default function ScreenerTab() {
         return true
       })
 
-    // Apply market filter
     if (filterMarket !== 'All') {
       result = result.filter(s => s.market === filterMarket)
     }
 
-    // Apply sector filter
     if (filterSector !== 'All') {
       result = result.filter(s => s.sector === filterSector)
     }
 
-    // Apply dividend yield filter
+    // Advanced filters
     result = result.filter(s => {
       const dy = s.divYield ?? 0
       return dy >= filterDivYieldMin && dy <= filterDivYieldMax
     })
 
-    // Apply P/E filter
     result = result.filter(s => {
       const pe = s.pe ?? 0
       return pe >= filterPEMin && pe <= filterPEMax
     })
 
-    // Apply market cap filter
     if (filterMarketCap !== 'All') {
       result = result.filter(s => {
         const cap = s.marketCap ?? 0
         switch (filterMarketCap) {
-          case 'Mega':
-            return cap > 200e9
-          case 'Large':
-            return cap >= 10e9 && cap <= 200e9
-          case 'Mid':
-            return cap >= 2e9 && cap < 10e9
-          case 'Small':
-            return cap < 2e9
-          default:
-            return true
+          case 'Mega': return cap > 200e9
+          case 'Large': return cap >= 10e9 && cap <= 200e9
+          case 'Mid': return cap >= 2e9 && cap < 10e9
+          case 'Small': return cap < 2e9
+          default: return true
         }
       })
     }
 
-    // Apply sorting
     result.sort((a, b) => {
       let aVal, bVal
       switch (sortBy) {
         case 'name':
-          aVal = a.name.toLowerCase()
-          bVal = b.name.toLowerCase()
-          break
+          aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break
         case 'price':
-          aVal = a.price ?? 0
-          bVal = b.price ?? 0
-          break
+          aVal = a.price ?? 0; bVal = b.price ?? 0; break
         case 'change':
-          aVal = a.change ?? 0
-          bVal = b.change ?? 0
-          break
+          aVal = a.change ?? 0; bVal = b.change ?? 0; break
         case 'divYield':
-          aVal = a.divYield ?? 0
-          bVal = b.divYield ?? 0
-          break
+          aVal = a.divYield ?? 0; bVal = b.divYield ?? 0; break
         case 'pe':
-          aVal = a.pe ?? 999
-          bVal = b.pe ?? 999
-          break
+          aVal = a.pe ?? 999; bVal = b.pe ?? 999; break
         case 'marketCap':
-          aVal = a.marketCap ?? 0
-          bVal = b.marketCap ?? 0
-          break
+          aVal = a.marketCap ?? 0; bVal = b.marketCap ?? 0; break
         default:
-          aVal = a.name.toLowerCase()
-          bVal = b.name.toLowerCase()
+          aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase()
       }
-
       if (aVal < bVal) return sortDesc ? 1 : -1
       if (aVal > bVal) return sortDesc ? -1 : 1
       return 0
@@ -269,22 +450,20 @@ export default function ScreenerTab() {
     return result
   }, [allStocks, stocksData, filterMarket, filterSector, filterDivYieldMin, filterDivYieldMax, filterPEMin, filterPEMax, filterMarketCap, sortBy, sortDesc])
 
-  // Limit displayed stocks — show 25 at a time
   const stocks = useMemo(() => allFilteredStocks.slice(0, displayLimit), [allFilteredStocks, displayLimit])
 
   // ── Load initial stock list ──────────────────────────────────────────
   useEffect(() => {
-    const stocks = []
+    const list = []
     Object.entries(MARKETS).forEach(([marketId, market]) => {
       market.stocks.forEach(stock => {
-        stocks.push({ ...stock, market: marketId })
+        list.push({ ...stock, market: marketId })
       })
     })
-    setAllStocks(stocks)
+    setAllStocks(list)
   }, [])
 
   // ── Batch fetch metrics ──────────────────────────────────────────────
-  // Only fetch metrics for stocks that are visible (first 30 + as user scrolls)
   const [fetchedCount, setFetchedCount] = useState(0)
   const BATCH_SIZE = 10
   const INITIAL_LOAD = 25
@@ -332,7 +511,6 @@ export default function ScreenerTab() {
     setFetching(false)
   }, [])
 
-  // Initial load — just first 30 stocks
   useEffect(() => {
     if (allStocks.length === 0) return
     const toFetch = allStocks.filter(s => !stocksData[s.symbol]).slice(0, INITIAL_LOAD)
@@ -341,7 +519,6 @@ export default function ScreenerTab() {
     }
   }, [allStocks.length])
 
-  // Load more when user scrolls to bottom
   const loadMore = useCallback(() => {
     const unfetched = allStocks.filter(s => !stocksData[s.symbol])
     const nextBatch = unfetched.slice(0, 25)
@@ -350,87 +527,55 @@ export default function ScreenerTab() {
     }
   }, [allStocks, stocksData, fetchMoreStocks])
 
-  // ── Enrich stock data with metrics ───────────────────────────────────
-  const enrichedStocks = useMemo(() => {
-    return allStocks.map(stock => ({
-      ...stock,
-      ...stocksData[stock.symbol],
-    }))
-  }, [allStocks, stocksData])
-
   // ── Toggle watchlist ─────────────────────────────────────────────────
-  const toggleWatchlist = useCallback(
-    symbol => {
-      setWatchlist(prev => {
-        const next = prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol]
-        localStorage.setItem('watchlist', JSON.stringify(next))
-        return next
-      })
-    },
-    []
-  )
+  const toggleWatchlist = useCallback(symbol => {
+    setWatchlist(prev => {
+      const next = prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol]
+      localStorage.setItem('watchlist', JSON.stringify(next))
+      return next
+    })
+  }, [])
 
   // ── Quick preset filters ─────────────────────────────────────────────
   const applyPreset = useCallback(preset => {
     setDisplayLimit(25)
+    // Reset advanced filters to defaults first
+    setFilterDivYieldMin(0)
+    setFilterDivYieldMax(15)
+    setFilterPEMin(0)
+    setFilterPEMax(100)
+    setFilterMarketCap('All')
+    setFilterMarket('All')
+    setFilterSector('All')
+
     switch (preset) {
       case 'highDiv':
         setFilterDivYieldMin(4)
-        setFilterDivYieldMax(15)
-        setFilterMarket('All')
-        setFilterSector('All')
+        setShowAdvanced(true)
         break
       case 'value':
-        setFilterPEMin(0)
         setFilterPEMax(15)
-        setFilterMarket('All')
-        setFilterSector('All')
+        setShowAdvanced(true)
         break
       case 'growth':
-        setFilterMarket('All')
         setFilterSector('Technology')
         break
       case 'tsxLarge':
         setFilterMarket('TSX')
         setFilterMarketCap('Large')
+        setShowAdvanced(true)
         break
       case 'usTech':
         setFilterMarket('SP500')
         setFilterSector('Technology')
         break
       case 'defensive':
-        setFilterMarket('All')
-        setFilterSector('All')
+        setFilterSector('Utilities')
         break
       default:
         break
     }
   }, [])
-
-  // ── Calculate stats ──────────────────────────────────────────────────
-  const stats = useMemo(() => {
-    const validStocks = stocks.filter(s => s.price != null)
-    if (validStocks.length === 0) return { count: 0, avgDiv: 0, avgPE: 0, avgCap: 0 }
-
-    const avgDiv = validStocks.reduce((sum, s) => sum + (s.divYield ?? 0), 0) / validStocks.length
-    const avgPE = validStocks.reduce((sum, s) => sum + (s.pe ?? 0), 0) / validStocks.length
-    const avgCap = validStocks.reduce((sum, s) => sum + (s.marketCap ?? 0), 0) / validStocks.length
-
-    return {
-      count: validStocks.length,
-      avgDiv,
-      avgPE,
-      avgCap,
-    }
-  }, [stocks])
-
-  // ── CSS Pulse animation ──────────────────────────────────────────────
-  const pulseStyle = {
-    '@keyframes pulse': {
-      '0%, 100%': { opacity: 1 },
-      '50%': { opacity: 0.5 },
-    },
-  }
 
   return (
     <div style={{ padding: '20px', background: 'var(--bg)' }}>
@@ -603,6 +748,35 @@ export default function ScreenerTab() {
         .watchlist-btn:hover {
           transform: scale(1.2);
         }
+        .search-dropdown {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          margin-top: 4px;
+          max-height: 340px;
+          overflow-y: auto;
+          z-index: 100;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .search-result-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          border-bottom: 1px solid var(--border);
+          transition: background 0.12s;
+        }
+        .search-result-item:last-child {
+          border-bottom: none;
+        }
+        .search-result-item:active {
+          background: var(--bg-hover);
+        }
         @media (max-width: 768px) {
           .screener-filters {
             flex-direction: column;
@@ -622,10 +796,123 @@ export default function ScreenerTab() {
         }
       `}</style>
 
+      {/* ═══════════════ SEARCH MODE ═══════════════ */}
+      <div style={{ marginBottom: 32 }}>
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative' }}>
+            <span style={{
+              position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
+              fontSize: 18, pointerEvents: 'none', zIndex: 1,
+            }}>
+              🔍
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value)
+                setSelectedResult(null)
+              }}
+              onFocus={() => { if (searchResults.length > 0) setSearchOpen(true) }}
+              placeholder="Search stocks, ETFs, or crypto..."
+              style={{
+                width: '100%',
+                height: 52,
+                fontSize: 16,
+                borderRadius: 14,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                padding: '0 20px 0 46px',
+                color: 'var(--text)',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
+            />
+            {searchLoading && (
+              <span style={{
+                position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+                fontSize: 13, color: 'var(--text-muted)',
+              }}>
+                Loading...
+              </span>
+            )}
+          </div>
+
+          {/* Search Dropdown */}
+          {searchOpen && searchResults.length > 0 && (
+            <div className="search-dropdown">
+              {searchResults.map(r => (
+                <div
+                  key={r.symbol}
+                  className="search-result-item"
+                  onClick={() => handleSearchResultClick(r)}
+                >
+                  <LogoAvatar symbol={r.symbol} size={32} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: 14 }}>
+                        {r.symbol}
+                      </span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                        background: 'var(--bg-muted)', color: 'var(--text-muted)',
+                      }}>
+                        {r.exchange}
+                      </span>
+                      {r.type && r.type !== 'EQUITY' && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                          background: '#8B5CF615', color: '#8B5CF6',
+                        }}>
+                          {r.type}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {r.name}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {searchOpen && searchResults.length === 0 && searchQuery.trim() && !searchLoading && (
+            <div className="search-dropdown" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+              No results found
+            </div>
+          )}
+        </div>
+
+        {/* Search Detail Card */}
+        {selectedResult && (
+          <SearchDetailCard
+            result={selectedResult}
+            onAddWatchlist={toggleWatchlist}
+            isInWatchlist={watchlist.includes(selectedResult.symbol)}
+          />
+        )}
+      </div>
+
+      {/* Close search dropdown on outside click */}
+      {searchOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 50 }}
+          onClick={() => setSearchOpen(false)}
+        />
+      )}
+
+      {/* ═══════════════ SCREENER MODE ═══════════════ */}
+
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: '0 0 8px 0', fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>Stock Screener</h1>
-        <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>Filter and discover stocks across global markets</p>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ margin: '0 0 6px 0', fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>
+          Stock Screener
+        </h2>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
+          Filter and discover stocks across global markets
+        </p>
       </div>
 
       {/* Quick Presets */}
@@ -655,11 +942,11 @@ export default function ScreenerTab() {
         <div className="screener-filters">
           <div className="screener-filter-group" style={{ minWidth: 150 }}>
             <label>Market</label>
-            <select value={filterMarket} onChange={e => setFilterMarket(e.target.value)}>
+            <select value={filterMarket} onChange={e => { setFilterMarket(e.target.value); setDisplayLimit(25) }}>
               <option value="All">All Markets</option>
-              {['TSX', 'SP500', 'NASDAQ', 'FTSE100', 'DAX', 'NIKKEI'].map(m => (
+              {['TSX', 'SP500', 'NASDAQ', 'FTSE100', 'DAX', 'NIKKEI', 'ETFs'].map(m => (
                 <option key={m} value={m}>
-                  {MARKET_LIST.find(x => x.id === m)?.name || m}
+                  {MARKETS[m]?.name || m}
                 </option>
               ))}
             </select>
@@ -667,44 +954,11 @@ export default function ScreenerTab() {
 
           <div className="screener-filter-group" style={{ minWidth: 150 }}>
             <label>Sector</label>
-            <select value={filterSector} onChange={e => setFilterSector(e.target.value)}>
+            <select value={filterSector} onChange={e => { setFilterSector(e.target.value); setDisplayLimit(25) }}>
               <option value="All">All Sectors</option>
               {allSectors.map(sector => (
-                <option key={sector} value={sector}>
-                  {sector}
-                </option>
+                <option key={sector} value={sector}>{sector}</option>
               ))}
-            </select>
-          </div>
-
-          <div className="screener-filter-group" style={{ minWidth: 140 }}>
-            <label>Div Yield Min %</label>
-            <input type="number" min="0" max="15" value={filterDivYieldMin} onChange={e => setFilterDivYieldMin(parseFloat(e.target.value) || 0)} />
-          </div>
-
-          <div className="screener-filter-group" style={{ minWidth: 140 }}>
-            <label>Div Yield Max %</label>
-            <input type="number" min="0" max="15" value={filterDivYieldMax} onChange={e => setFilterDivYieldMax(parseFloat(e.target.value) || 15)} />
-          </div>
-
-          <div className="screener-filter-group" style={{ minWidth: 120 }}>
-            <label>P/E Min</label>
-            <input type="number" min="0" max="100" value={filterPEMin} onChange={e => setFilterPEMin(parseFloat(e.target.value) || 0)} />
-          </div>
-
-          <div className="screener-filter-group" style={{ minWidth: 120 }}>
-            <label>P/E Max</label>
-            <input type="number" min="0" max="100" value={filterPEMax} onChange={e => setFilterPEMax(parseFloat(e.target.value) || 100)} />
-          </div>
-
-          <div className="screener-filter-group" style={{ minWidth: 140 }}>
-            <label>Market Cap</label>
-            <select value={filterMarketCap} onChange={e => setFilterMarketCap(e.target.value)}>
-              <option value="All">All Caps</option>
-              <option value="Mega">&gt;$200B (Mega)</option>
-              <option value="Large">$10-200B (Large)</option>
-              <option value="Mid">$2-10B (Mid)</option>
-              <option value="Small">&lt;$2B (Small)</option>
             </select>
           </div>
 
@@ -728,26 +982,72 @@ export default function ScreenerTab() {
             </select>
           </div>
         </div>
-      </div>
 
-      {/* Stats Bar */}
-      <div className="screener-stats">
-        <div className="stat-card">
-          <div className="stat-label">Results</div>
-          <div className="stat-value">{stats.count}</div>
+        {/* Advanced Filters Toggle */}
+        <div style={{ marginTop: 14 }}>
+          <button
+            onClick={() => setShowAdvanced(prev => !prev)}
+            style={{
+              padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+              border: '1px solid var(--border)', background: showAdvanced ? 'var(--bg-hover)' : 'var(--bg-card)',
+              color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s',
+            }}
+          >
+            {showAdvanced ? '▾ Hide Advanced Filters' : '▸ Advanced Filters'}
+          </button>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Avg Div Yield</div>
-          <div className="stat-value">{formatPct(stats.avgDiv / 100)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Avg P/E</div>
-          <div className="stat-value">{formatNum(stats.avgPE, 1)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Avg Market Cap</div>
-          <div className="stat-value">{formatMarketCap(stats.avgCap, sym)}</div>
-        </div>
+
+        {/* Advanced Filters Panel */}
+        {showAdvanced && (
+          <div className="screener-filters" style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+            <div className="screener-filter-group" style={{ minWidth: 130 }}>
+              <label>Div Yield Min %</label>
+              <input
+                type="number" inputMode="decimal" min="0" max="15" step="0.5"
+                value={filterDivYieldMin}
+                onChange={e => setFilterDivYieldMin(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="screener-filter-group" style={{ minWidth: 130 }}>
+              <label>Div Yield Max %</label>
+              <input
+                type="number" inputMode="decimal" min="0" max="15" step="0.5"
+                value={filterDivYieldMax}
+                onChange={e => setFilterDivYieldMax(parseFloat(e.target.value) || 15)}
+              />
+            </div>
+
+            <div className="screener-filter-group" style={{ minWidth: 120 }}>
+              <label>P/E Min</label>
+              <input
+                type="number" inputMode="decimal" min="0" max="100" step="1"
+                value={filterPEMin}
+                onChange={e => setFilterPEMin(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="screener-filter-group" style={{ minWidth: 120 }}>
+              <label>P/E Max</label>
+              <input
+                type="number" inputMode="decimal" min="0" max="100" step="1"
+                value={filterPEMax}
+                onChange={e => setFilterPEMax(parseFloat(e.target.value) || 100)}
+              />
+            </div>
+
+            <div className="screener-filter-group" style={{ minWidth: 160 }}>
+              <label>Market Cap</label>
+              <select value={filterMarketCap} onChange={e => setFilterMarketCap(e.target.value)}>
+                <option value="All">All Caps</option>
+                <option value="Mega">&gt;$200B (Mega)</option>
+                <option value="Large">$10-200B (Large)</option>
+                <option value="Mid">$2-10B (Mid)</option>
+                <option value="Small">&lt;$2B (Small)</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Results Table */}
@@ -755,13 +1055,25 @@ export default function ScreenerTab() {
         <table className="screener-table">
           <thead>
             <tr>
-              <th onClick={() => { setSortBy('name'); setSortDesc(sortBy === 'name' && !sortDesc) }}>Stock</th>
-              <th onClick={() => { setSortBy('price'); setSortDesc(sortBy === 'price' && !sortDesc) }}>Price</th>
-              <th onClick={() => { setSortBy('change'); setSortDesc(sortBy === 'change' && !sortDesc) }}>Daily Change</th>
-              <th onClick={() => { setSortBy('marketCap'); setSortDesc(sortBy === 'marketCap' && !sortDesc) }}>Market Cap</th>
-              <th onClick={() => { setSortBy('pe'); setSortDesc(sortBy === 'pe' && !sortDesc) }}>P/E Ratio</th>
-              <th onClick={() => { setSortBy('divYield'); setSortDesc(sortBy === 'divYield' && !sortDesc) }}>Div Yield</th>
-              <th>52-Week Range</th>
+              <th onClick={() => { setSortBy('name'); setSortDesc(sortBy === 'name' && !sortDesc) }}>
+                Stock {sortBy === 'name' ? (sortDesc ? '▼' : '▲') : ''}
+              </th>
+              <th onClick={() => { setSortBy('price'); setSortDesc(sortBy === 'price' && !sortDesc) }}>
+                Price {sortBy === 'price' ? (sortDesc ? '▼' : '▲') : ''}
+              </th>
+              <th onClick={() => { setSortBy('change'); setSortDesc(sortBy === 'change' && !sortDesc) }}>
+                Change% {sortBy === 'change' ? (sortDesc ? '▼' : '▲') : ''}
+              </th>
+              <th onClick={() => { setSortBy('marketCap'); setSortDesc(sortBy === 'marketCap' && !sortDesc) }}>
+                Market Cap {sortBy === 'marketCap' ? (sortDesc ? '▼' : '▲') : ''}
+              </th>
+              <th onClick={() => { setSortBy('pe'); setSortDesc(sortBy === 'pe' && !sortDesc) }}>
+                P/E {sortBy === 'pe' ? (sortDesc ? '▼' : '▲') : ''}
+              </th>
+              <th onClick={() => { setSortBy('divYield'); setSortDesc(sortBy === 'divYield' && !sortDesc) }}>
+                Div Yield {sortBy === 'divYield' ? (sortDesc ? '▼' : '▲') : ''}
+              </th>
+              <th>52W Range</th>
               <th>Sector</th>
               <th style={{ textAlign: 'center' }}>Watchlist</th>
             </tr>
@@ -799,43 +1111,48 @@ export default function ScreenerTab() {
                   {/* Price */}
                   <td className="price-cell">
                     {hasData ? (
-                      <div>{sym}{convert(data.price, stock.market).toFixed(2)}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                        {sym}{convert(data.price, stock.market).toFixed(2)}
+                      </div>
                     ) : (
-                      <div className="skeleton" style={{ width: 60, height: 14, borderRadius: 4 }} />
+                      <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 60, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>
 
-                  {/* Daily Change % */}
+                  {/* Change% */}
                   <td className="price-cell">
                     {hasData ? (
-                      <div className={isPositive ? 'change-positive' : 'change-negative'}>
-                        {isPositive ? '+' : ''}{formatPct(changePercent / 100)} ({formatNum(data.change, 2)})
+                      <div
+                        className={isPositive ? 'change-positive' : 'change-negative'}
+                        style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+                      >
+                        {isPositive ? '+' : ''}{formatPct(changePercent / 100)}
                       </div>
                     ) : (
-                      <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 4 }} />
+                      <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 70, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>
 
                   {/* Market Cap */}
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'right', fontFamily: "'IBM Plex Mono', monospace" }}>
                     {hasData && data.marketCap ? (
                       formatMarketCap(convert(data.marketCap, stock.market), sym)
                     ) : (
-                      <div className="skeleton" style={{ width: 50, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
+                      <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 50, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>
 
                   {/* P/E Ratio */}
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'right', fontFamily: "'IBM Plex Mono', monospace" }}>
                     {hasData && data.pe ? formatNum(data.pe, 1) : (
-                      hasData ? <span style={{ color: 'var(--text-muted)' }}>—</span> : <div className="skeleton" style={{ width: 36, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
+                      hasData ? <span style={{ color: 'var(--text-muted)' }}>—</span> : <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 36, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>
 
                   {/* Dividend Yield */}
-                  <td style={{ textAlign: 'right', fontWeight: 600, color: data && data.divYield > 0 ? 'var(--green)' : 'var(--text)' }}>
+                  <td style={{ textAlign: 'right', fontWeight: 600, fontFamily: "'IBM Plex Mono', monospace", color: data && data.divYield > 0 ? 'var(--green)' : 'var(--text)' }}>
                     {hasData ? (data.divYield > 0 ? formatPct(data.divYield / 100) : <span style={{ color: 'var(--text-muted)' }}>—</span>) : (
-                      <div className="skeleton" style={{ width: 40, height: 14, borderRadius: 4, marginLeft: 'auto' }} />
+                      <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 40, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>
 
@@ -844,7 +1161,7 @@ export default function ScreenerTab() {
                     {hasData && data.high52w && data.low52w ? (
                       <WeekRange52 price={data.price} low={data.low52w} high={data.high52w} />
                     ) : (
-                      <div className="skeleton" style={{ width: '100%', height: 14, borderRadius: 4 }} />
+                      <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: '100%', animation: 'pulse 2s infinite' }} />
                     )}
                   </td>
 
@@ -886,7 +1203,6 @@ export default function ScreenerTab() {
           <button
             onClick={() => {
               setDisplayLimit(prev => prev + 25)
-              // Fetch data for any new stocks that need it
               const unfetched = allStocks.filter(s => !stocksData[s.symbol])
               if (unfetched.length > 0) loadMore()
             }}

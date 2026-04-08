@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 
 function Sparkline({ data, color }) {
@@ -28,7 +29,7 @@ function formatMcap(v) {
   return `$${v.toLocaleString()}`
 }
 
-export default function CryptoCard({ coin, selected, onClick }) {
+export default memo(function CryptoCard({ coin, selected, onClick }) {
   const { convert, sym } = useCurrency()
   const pct24h = coin.price_change_percentage_24h ?? 0
   const pct7d  = coin.price_change_percentage_7d_in_currency ?? 0
@@ -49,7 +50,10 @@ export default function CryptoCard({ coin, selected, onClick }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.() } }}
       style={{
         display: 'grid',
         gridTemplateColumns: '24px 32px 1fr auto auto auto',
@@ -109,4 +113,4 @@ export default function CryptoCard({ coin, selected, onClick }) {
       <Sparkline data={sparkData} color={isUp7d ? '#0A7C5C' : '#C0392B'} />
     </div>
   )
-}
+})

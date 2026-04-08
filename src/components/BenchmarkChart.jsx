@@ -37,6 +37,7 @@ const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
 
   // Fetch benchmark data when benchmark or range changes
   React.useEffect(() => {
+    let cancelled = false;
     const fetchBenchmarkData = async () => {
       setLoading(true);
       setError(null);
@@ -47,16 +48,19 @@ const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
           rangeConfig.days,
           rangeConfig.interval
         );
-        setBenchmarkData(data);
+        if (!cancelled) setBenchmarkData(data);
       } catch (err) {
-        setError('Failed to fetch benchmark data');
-        console.error(err);
+        if (!cancelled) {
+          setError('Failed to fetch benchmark data');
+          console.error(err);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchBenchmarkData();
+    return () => { cancelled = true; };
   }, [selectedBenchmark, selectedRange]);
 
   // Normalize and merge data
@@ -68,7 +72,9 @@ const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
     // Filter portfolio history based on range
     const rangeConfig = ranges.find(r => r.value === selectedRange);
     const now = new Date();
-    const cutoffDate = new Date(now.getTime() - (rangeConfig.days ? rangeConfig.days * 24 * 60 * 60 * 1000 : 0));
+    const cutoffDate = rangeConfig.days
+      ? new Date(now.getTime() - rangeConfig.days * 24 * 60 * 60 * 1000)
+      : new Date(0); // "All" range: include everything
 
     const filteredPortfolioHistory = portfolioHistory.filter(item => {
       const date = new Date(item.snapshot_date);
@@ -91,28 +97,35 @@ const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
       benchmarkMap[dateStr] = item.close;
     });
 
+    // Pre-sort benchmark timestamps for O(n log m) binary search
+    const benchmarkSorted = benchmarkData.map(b => ({
+      ts: new Date(b.date).getTime(),
+      close: b.close,
+    })).sort((a, b) => a.ts - b.ts);
+
+    function findClosestBenchmarkPrice(targetTs) {
+      let lo = 0, hi = benchmarkSorted.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (benchmarkSorted[mid].ts < targetTs) lo = mid + 1;
+        else hi = mid;
+      }
+      // Check lo and lo-1 for closest
+      let bestIdx = lo;
+      if (lo > 0 && Math.abs(benchmarkSorted[lo - 1].ts - targetTs) < Math.abs(benchmarkSorted[lo].ts - targetTs)) {
+        bestIdx = lo - 1;
+      }
+      return benchmarkSorted[bestIdx]?.close ?? null;
+    }
+
     // Build merged dataset
     const merged = filteredPortfolioHistory.map(item => {
       const dateStr = item.snapshot_date;
       const portfolioPercentChange = ((item.total_value / portfolioStartValue) - 1) * 100;
 
-      // Find closest benchmark price
-      let benchmarkPrice = null;
+      const itemTs = new Date(dateStr).getTime();
+      const benchmarkPrice = findClosestBenchmarkPrice(itemTs);
       let benchmarkPercentChange = 0;
-
-      const itemDate = new Date(dateStr);
-      let closestDate = null;
-      let closestDistance = Infinity;
-
-      benchmarkData.forEach(bItem => {
-        const bDate = new Date(bItem.date);
-        const distance = Math.abs(itemDate - bDate);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestDate = bItem.date;
-          benchmarkPrice = bItem.close;
-        }
-      });
 
       if (benchmarkPrice) {
         benchmarkPercentChange = ((benchmarkPrice / benchmarkStartPrice) - 1) * 100;

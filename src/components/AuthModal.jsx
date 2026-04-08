@@ -39,7 +39,13 @@ export default function AuthModal({ onClose }) {
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({ id: data.user.id, username: trimmed })
-          if (profileError) throw profileError
+          if (profileError) {
+            // Rollback: delete the orphaned auth user if profile creation fails
+            try { await supabase.auth.admin?.deleteUser?.(data.user.id) } catch {}
+            // Also sign out so the user isn't stuck in a half-created state
+            try { await supabase.auth.signOut() } catch {}
+            throw new Error('Failed to create profile. Please try again.')
+          }
         }
 
         setSuccess('Account created. You are now signed in.')

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { callClaudeVision } from '../api/research.js'
 import { searchSymbol } from '../api/yahoo.js'
 
@@ -61,13 +61,24 @@ export default function PortfolioImportModal({ onClose, onImport }) {
   const [importing, setImporting] = useState(false)
   const fileRef = useRef(null)
   const dropRef = useRef(null)
+  const previewRef = useRef(null)
+  previewRef.current = preview
+
+  // Revoke blob URL on unmount
+  useEffect(() => {
+    return () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current) }
+  }, [])
 
   const handleFile = useCallback((f) => {
     if (!f) return
     if (f.size > MAX_SIZE) { setError('Image must be under 10MB'); return }
     if (!f.type.startsWith('image/')) { setError('Please upload an image file'); return }
     setFile(f)
-    setPreview(URL.createObjectURL(f))
+    // Revoke old blob URL before creating a new one
+    setPreview(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(f)
+    })
     setError('')
     setResults(null)
   }, [])

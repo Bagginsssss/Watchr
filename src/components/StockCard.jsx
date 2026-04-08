@@ -1,41 +1,11 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { useCurrency } from '../context/CurrencyContext.jsx'
+import LogoAvatar from './LogoAvatar.jsx'
 
 const SECTOR_LABEL_COLOR = 'var(--text-secondary)'
 const SECTOR_LABEL_BG = 'var(--bg-hover)'
 
-function LogoAvatar({ symbol, logoUrl, size = 28 }) {
-  const [failed, setFailed] = useState(false)
-  const letter = (symbol?.[0] ?? '?').toUpperCase()
-
-  if (logoUrl && !failed) {
-    return (
-      <img
-        src={logoUrl}
-        alt={symbol}
-        onError={() => setFailed(true)}
-        style={{
-          width: size, height: size, borderRadius: 4,
-          objectFit: 'contain', background: 'var(--bg-card)',
-          padding: 2, boxSizing: 'border-box', flexShrink: 0,
-          border: '1px solid var(--border)',
-        }}
-      />
-    )
-  }
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: 4,
-      background: 'var(--text)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.42, fontWeight: 500, color: '#FFFFFF', flexShrink: 0,
-    }}>
-      {letter}
-    </div>
-  )
-}
-
-export default function StockCard({ stock, selected, onClick, rank, logoUrl }) {
+export default memo(function StockCard({ stock, selected, onClick, rank, logoUrl }) {
   const { convert, sym } = useCurrency()
   const { symbol, name, price, changePct, currency, sector, loading, error } = stock
   const isUp = (changePct ?? 0) >= 0
@@ -45,7 +15,10 @@ export default function StockCard({ stock, selected, onClick, rank, logoUrl }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.() } }}
       style={{
         display: 'grid',
         gridTemplateColumns: '24px 32px 1fr auto auto',
@@ -106,4 +79,4 @@ export default function StockCard({ stock, selected, onClick, rank, logoUrl }) {
       </div>
     </div>
   )
-}
+})

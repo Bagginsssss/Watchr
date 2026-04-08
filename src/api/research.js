@@ -4,13 +4,24 @@ const BASE = '/finance'
 
 // ─── Data Fetching ────────────────────────────────────────────────────────────
 
+// Validate symbols for research API calls
+const VALID_SYMBOL = /^[A-Za-z0-9\.\-\^=]{1,20}$/
+function validateResearchSymbol(symbol) {
+  if (!symbol || !VALID_SYMBOL.test(symbol)) throw new Error('Invalid symbol')
+  return symbol
+}
+
 async function fetchFundamentals(symbol) {
+  validateResearchSymbol(symbol)
+  const encoded = encodeURIComponent(symbol)
   const mods1 = 'summaryDetail,defaultKeyStatistics,financialData,price,earningsHistory'
   const mods2 = 'insiderTransactions,recommendationTrend,upgradeDowngradeHistory,institutionOwnership'
   const [r1, r2] = await Promise.all([
-    fetch(`${BASE}/v10/finance/quoteSummary/${symbol}?modules=${mods1}`),
-    fetch(`${BASE}/v10/finance/quoteSummary/${symbol}?modules=${mods2}`),
+    fetch(`${BASE}/v10/finance/quoteSummary/${encoded}?modules=${mods1}`),
+    fetch(`${BASE}/v10/finance/quoteSummary/${encoded}?modules=${mods2}`),
   ])
+  if (!r1.ok) throw new Error(`Fundamentals fetch failed: ${r1.status}`)
+  if (!r2.ok) throw new Error(`Fundamentals fetch failed: ${r2.status}`)
   const [d1, d2] = await Promise.all([r1.json(), r2.json()])
   return {
     ...(d1.quoteSummary?.result?.[0] ?? {}),
@@ -19,7 +30,9 @@ async function fetchFundamentals(symbol) {
 }
 
 async function fetchPriceHistory(symbol) {
-  const res = await fetch(`${BASE}/v8/finance/chart/${symbol}?interval=1d&range=1y`)
+  validateResearchSymbol(symbol)
+  const res = await fetch(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`)
+  if (!res.ok) throw new Error(`Price history fetch failed: ${res.status}`)
   const json = await res.json()
   const result = json.chart?.result?.[0]
   if (!result) return []
@@ -472,8 +485,9 @@ async function scoreMoat(name, symbol, fd) {
       `Evaluate the economic moat of ${name} (${symbol}). Gross margin: ${gm != null ? (gm * 100).toFixed(0) : 'unknown'}%. Respond ONLY with valid JSON, no other text:\n\n{"moatScore":0.0-1.0,"moatType":"wide"|"narrow"|"none","strengths":["..."],"threats":["..."]}`
     )
     const parsed = JSON.parse(raw.trim().replace(/```json|```/g, ''))
+    const moatScore = typeof parsed.moatScore === 'number' ? Math.max(0, Math.min(1, parsed.moatScore)) : 0.5
     return {
-      score: parsed.moatScore ?? 0.5,
+      score: moatScore,
       data: {
         'Moat Width': parsed.moatType ? parsed.moatType.toUpperCase() : '—',
         Strengths: parsed.strengths?.join(', ') || '—',

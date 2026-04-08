@@ -59,6 +59,7 @@ export default function ComparePanel({ symbols, onClose }) {
   // Fetch chart data for all symbols
   useEffect(() => {
     if (!symbols.length) return
+    let cancelled = false
     setLoading(true)
 
     Promise.all(symbols.map(sym =>
@@ -66,6 +67,7 @@ export default function ComparePanel({ symbols, onClose }) {
         .then(data => ({ sym, data }))
         .catch(() => ({ sym, data: [] }))
     )).then(results => {
+      if (cancelled) return
       // Find the longest series as template
       const template = results.reduce((best, r) => r.data.length > best.data.length ? r : best, { data: [] })
       if (!template.data.length) { setChartData([]); setLoading(false); return }
@@ -85,6 +87,8 @@ export default function ComparePanel({ symbols, onClose }) {
       setChartData(normalized)
       setLoading(false)
     })
+
+    return () => { cancelled = true }
   }, [symbols, range])
 
   // Fetch metrics for all symbols

@@ -6,43 +6,7 @@ import { useCurrency } from '../context/CurrencyContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { supabase, supabaseReady } from '../lib/supabase.js'
 import { formatMarketCap, formatVolume, formatPct, timeAgo } from '../utils/format.js'
-
-/* ────────────────────────────────────────────────────────────────────
-   Tiny Sparkline Component
-   ──────────────────────────────────────────────────────────────────── */
-function Sparkline({ data, width = 60, height = 24, color = '#0A7C5C' }) {
-  try {
-    if (!data || data.length < 2) return <div style={{ width, height }} />
-    const closes = data.map(d => typeof d === 'number' ? d : d?.close).filter(c => c != null && isFinite(c))
-    if (closes.length < 2) return <div style={{ width, height }} />
-
-    const min = Math.min(...closes)
-    const max = Math.max(...closes)
-    const range = max - min || 1
-    const pad = 1
-
-    const points = closes.map((c, i) => {
-      const x = pad + (i / (closes.length - 1)) * (width - pad * 2)
-      const y = pad + (1 - (c - min) / range) * (height - pad * 2)
-      return `${x},${y}`
-    }).join(' ')
-
-    return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
-        <polyline
-          points={points}
-          fill="none"
-          stroke={color}
-          strokeWidth={1}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    )
-  } catch {
-    return <div style={{ width, height }} />
-  }
-}
+import Sparkline from '../components/Sparkline.jsx'
 
 /* ────────────────────────────────────────────────────────────────────
    Loading Skeleton
@@ -827,40 +791,7 @@ export default function DashboardTab({ user = null, alerts = [] }) {
       {/* Quick Actions */}
       <QuickActions />
 
-      {/* CSS Animations (injected as style) */}
-      <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(16px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 16px;
-        }
-
-        @media (max-width: 768px) {
-          .dashboard-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
+      {/* CSS moved to index.html or a CSS file */}
     </div>
   )
 }

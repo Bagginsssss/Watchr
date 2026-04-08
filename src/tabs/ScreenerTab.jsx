@@ -2,82 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { fetchQuote, fetchMetrics, fetchLogoUrl, searchSymbol, fetchQuotesBulk } from '../api/yahoo.js'
 import { MARKETS, MARKET_LIST } from '../data/stocks.js'
 import { useCurrency } from '../context/CurrencyContext.jsx'
-import { formatMarketCap, formatVolume, formatPct, formatNum } from '../utils/format.js'
-
-/* ── Sector Colors ───────────────────────────────────────────────────── */
-const SECTOR_COLORS = {
-  'Financials': '#3B82F6',
-  'Technology': '#8B5CF6',
-  'Energy': '#F97316',
-  'Industrials': '#14B8A6',
-  'Materials': '#F59E0B',
-  'Telecom': '#06B6D4',
-  'Cons. Staples': '#22C55E',
-  'Cons. Discretionary': '#FB7185',
-  'Healthcare': '#38BDF8',
-  'Utilities': '#FACC15',
-}
-
-const getSectorColor = (sector) => {
-  const color = SECTOR_COLORS[sector]
-  if (!color) return { bg: 'var(--bg-muted)', text: 'var(--text-secondary)', accent: '#999' }
-  return { bg: `${color}15`, text: color, accent: color }
-}
-
-/* ── Display Symbol (strip exchange suffixes) ─────────────────────────── */
-function displaySymbolText(symbol) {
-  return symbol
-    .replace(/\.(TO|V|NE|CN|L|DE|T)$/i, '')
-    .replace(/-[A-Z]$/, s => ' ' + s.slice(1))
-}
-
-/* ── Logo Avatar ─────────────────────────────────────────────────────── */
-function LogoAvatar({ symbol, size = 32 }) {
-  const [failed, setFailed] = useState(false)
-  const letter = (symbol?.[0] ?? '?').toUpperCase()
-  const logoUrl = !failed ? fetchLogoUrl(symbol) : null
-
-  if (logoUrl) {
-    return (
-      <img
-        src={logoUrl}
-        alt={symbol}
-        onError={() => setFailed(true)}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: 6,
-          objectFit: 'contain',
-          background: 'var(--bg-card)',
-          padding: 2,
-          boxSizing: 'border-box',
-          flexShrink: 0,
-          border: '1px solid var(--border)',
-        }}
-      />
-    )
-  }
-
-  return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: 6,
-        background: 'var(--text)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: size * 0.38,
-        fontWeight: 600,
-        color: '#FFFFFF',
-        flexShrink: 0,
-      }}
-    >
-      {letter}
-    </div>
-  )
-}
+import { formatMarketCap, formatVolume, formatPct, formatNum, displaySymbolText, getSectorColor } from '../utils/format.js'
+import LogoAvatar from '../components/LogoAvatar.jsx'
 
 /* ── Map market ID to native currency ────────────────────────────────── */
 function getMarketCurrency(marketId) {

@@ -76,11 +76,17 @@ export default function CryptoTab() {
   // Load metadata when a coin is selected
   useEffect(() => {
     const crypto = CRYPTO_LIST.find(c => c.id === selected)
-    if (!crypto || metadata[crypto.cmcId]) return
-    fetchCoinMetadata([crypto.cmcId])
-      .then(m => setMetadata(prev => ({ ...prev, ...m })))
-      .catch(() => {})
-  }, [selected, metadata])
+    if (!crypto) return
+    // Check if we already have this metadata to avoid dependency loop
+    setMetadata(prev => {
+      if (prev[crypto.cmcId]) return prev // already have it
+      // Fetch in the background, don't include metadata as a dep
+      fetchCoinMetadata([crypto.cmcId])
+        .then(m => setMetadata(p => ({ ...p, ...m })))
+        .catch(() => {})
+      return prev
+    })
+  }, [selected]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived data ──────────────────────────────────────────────────────────
   const selectedCoin = coins.find(c => c.id === selected)
@@ -119,9 +125,11 @@ export default function CryptoTab() {
     return `${sym}${c.toFixed(6)}`
   }
 
-  const convertedHistory = history.map(d => ({
-    ...d, close: d.close != null ? convert(d.close, 'USD') : null,
-  }))
+  const convertedHistory = useMemo(() =>
+    history.map(d => ({
+      ...d, close: d.close != null ? convert(d.close, 'USD') : null,
+    }))
+  , [history, convert])
 
   const ChartTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null

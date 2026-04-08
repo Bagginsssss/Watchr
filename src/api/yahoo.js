@@ -122,8 +122,8 @@ async function _fetchMetrics(symbol) {
 
 async function _fetchNews(symbol) {
   validateSymbol(symbol)
-  const q = symbol.replace('.TO', '').replace('.V', '').replace('^', '').replace('-', '')
-  const res = await fetch(`${BASE}/v1/finance/search?q=${q}&newsCount=6&enableFuzzyQuery=false&enableEnhancedTrivialQuery=true`)
+  const q = symbol.replaceAll('.TO', '').replaceAll('.V', '').replaceAll('^', '').replaceAll('-', '')
+  const res = await fetch(`${BASE}/v1/finance/search?q=${encodeURIComponent(q)}&newsCount=6&enableFuzzyQuery=false&enableEnhancedTrivialQuery=true`)
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   return (json.news ?? []).map(n => ({

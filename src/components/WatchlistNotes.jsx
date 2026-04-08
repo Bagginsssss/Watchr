@@ -15,6 +15,16 @@ const WatchlistNotes = ({ symbol, name, onClose }) => {
   const [hasChanges, setHasChanges] = useState(false);
 
   const debounceTimerRef = useRef(null);
+  const noteRef = useRef(note);
+  const tagsRef = useRef(tags);
+  const targetPriceRef = useRef(targetPrice);
+  const ratingRef = useRef(rating);
+
+  // Keep refs in sync with state
+  noteRef.current = note;
+  tagsRef.current = tags;
+  targetPriceRef.current = targetPrice;
+  ratingRef.current = rating;
 
   const predefinedTags = ['Dividend', 'Growth', 'Value', 'Momentum', 'Speculative', 'Core Holding', 'Watch Only'];
 
@@ -38,7 +48,14 @@ const WatchlistNotes = ({ symbol, name, onClose }) => {
     }
   }, [symbol]);
 
-  // Save notes to localStorage with debounce
+  // Clear debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
+
+  // Save notes to localStorage with debounce — reads from refs to avoid stale closures
   const saveNotes = () => {
     const stored = localStorage.getItem('watchlist_notes');
     let notes = {};
@@ -51,10 +68,10 @@ const WatchlistNotes = ({ symbol, name, onClose }) => {
     }
 
     notes[symbol] = {
-      note,
-      tags,
-      targetPrice: targetPrice ? parseFloat(targetPrice) : null,
-      rating,
+      note: noteRef.current,
+      tags: tagsRef.current,
+      targetPrice: targetPriceRef.current ? parseFloat(targetPriceRef.current) : null,
+      rating: ratingRef.current,
       updatedAt: new Date().toISOString(),
     };
 
@@ -383,7 +400,7 @@ const WatchlistNotes = ({ symbol, name, onClose }) => {
                 type="text"
                 value={customTagInput}
                 onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addCustomTag()}
+                onKeyDown={(e) => e.key === 'Enter' && addCustomTag()}
                 placeholder="Add custom tag"
               />
               <button

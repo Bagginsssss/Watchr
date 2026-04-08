@@ -22,6 +22,8 @@ export default function AlertsBell({ alerts, activeCount, onDelete }) {
       <button
         onClick={() => setOpen(!open)}
         title="Price Alerts"
+        aria-label="Price Alerts"
+        aria-expanded={open}
         style={{
           background: 'none', border: '1px solid var(--border)',
           borderRadius: 6, width: 32, height: 32,

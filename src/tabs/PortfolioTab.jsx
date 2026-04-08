@@ -10,6 +10,7 @@ import { usePortfolioHistory } from '../hooks/usePortfolioHistory.js'
 import BenchmarkChart from '../components/BenchmarkChart.jsx'
 import BrokerageImport from '../components/BrokerageImport.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import SharedLogoAvatar from '../components/LogoAvatar.jsx'
 
 const CHART_RANGES = [
   { label: '1D', range: '1d',  interval: '5m' },
@@ -30,43 +31,8 @@ const PIE_COLORS = [
   '#65A30D', '#8B6914', '#0284C7', '#B45309', '#5A3080',
 ]
 
-const AVATAR_COLORS = ['var(--text)','#0A7C5C','#3A5A8A','#7A4040','#6B4F8A','#8B6914','#2D6A4F','#5A3080']
-
-function LogoAvatar({ symbol, name, size = 34 }) {
-  const upper = (symbol ?? '').toUpperCase()
-  const clean = upper.replace(/\.(TO|NE|V|CN|L|DE|T)$/i, '').replace(/-[A-Z]$/, '')
-  const [failed, setFailed] = useState(false)
-  const letter = (clean?.[0] ?? '?').toUpperCase()
-  const bg = AVATAR_COLORS[clean.split('').reduce((s, c) => s + c.charCodeAt(0), 0) % AVATAR_COLORS.length]
-
-  if (!failed) {
-    return (
-      <img
-        src={`https://financialmodelingprep.com/image-stock/${upper}.png`}
-        alt={name}
-        onError={() => setFailed(true)}
-        style={{
-          width: size, height: size, borderRadius: 8,
-          objectFit: 'contain', background: 'var(--bg-card)',
-          padding: 3, flexShrink: 0, boxSizing: 'border-box',
-          border: '1px solid rgba(0,0,0,0.06)',
-        }}
-      />
-    )
-  }
-
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: 8,
-      background: `linear-gradient(135deg, ${bg}, ${bg}dd)`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.42, fontWeight: 600, color: '#FFFFFF', flexShrink: 0,
-      boxShadow: `0 2px 8px ${bg}33`,
-    }}>
-      {letter}
-    </div>
-  )
-}
+// Use shared LogoAvatar component
+const LogoAvatar = SharedLogoAvatar
 
 function AddHoldingModal({ onClose, onSave, onSaveMultiple, existing, customGroups, customAssignments, onAssignGroup }) {
   const isEdit = !!existing
@@ -363,6 +329,7 @@ function PortfolioChart({ holdings, convert, sym, customGroups, customAssignment
 
   useEffect(() => {
     if (!chartHoldings.length) { setChartData([]); return }
+    let cancelled = false
     setChartLoading(true)
     setChartData([])
 
@@ -376,6 +343,7 @@ function PortfolioChart({ holdings, convert, sym, customGroups, customAssignment
           } catch { return { symbol: h.symbol, shares: h.shares, data: [], native: 'USD' } }
         })
       ).then(results => {
+        if (cancelled) return
         const template = results.reduce((best, r) => r.data.length > best.data.length ? r : best, { data: [] })
         if (!template.data.length) { setChartData([]); setChartLoading(false); return }
 
@@ -393,13 +361,16 @@ function PortfolioChart({ holdings, convert, sym, customGroups, customAssignment
     } else {
       fetchHistory(chartSymbol, chartRange.range, chartRange.interval)
         .then(data => {
+          if (cancelled) return
           const native = /\.(TO|NE|V|CN)$/i.test(chartSymbol) ? 'CAD' : 'USD'
           setChartData(data.map(d => ({ ...d, close: d.close != null ? convert(d.close, native) : null })))
         })
-        .catch(() => setChartData([]))
-        .finally(() => setChartLoading(false))
+        .catch(() => { if (!cancelled) setChartData([]) })
+        .finally(() => { if (!cancelled) setChartLoading(false) })
     }
-  }, [chartSymbol, chartRange, holdings.length])
+
+    return () => { cancelled = true }
+  }, [chartSymbol, chartRange, holdings, convert])
 
   const firstClose = chartData[0]?.close
   const lastClose = chartData[chartData.length - 1]?.close
@@ -862,10 +833,11 @@ export default function PortfolioTab({ user }) {
     const { data, error } = await supabase
       .from('holdings')
       .select('*')
+      .eq('user_id', user?.id)
       .order('created_at', { ascending: true })
     if (!error) setHoldings(data ?? [])
     setLoadingHoldings(false)
-  }, [])
+  }, [user])
 
   const fetchPrices = useCallback(async (holdingsList) => {
     if (!holdingsList.length) return
@@ -916,7 +888,7 @@ export default function PortfolioTab({ user }) {
       fetchPrices(holdings)
       fetchCategories(holdings)
     }
-  }, [holdings])
+  }, [holdings, fetchPrices, fetchCategories])
 
   async function handleSave(data) {
     if (editingHolding) {

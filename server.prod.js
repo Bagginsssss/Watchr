@@ -24,8 +24,17 @@ try {
 
 // ── Yahoo Finance auth cache ──────────────────────────────────────────────────
 let yhoo = { crumb: '', cookie: '', ts: 0 }
+let yhooRefreshInProgress = false
+let yhooRefreshBackoff = 0
 
 async function refreshYahooAuth() {
+  if (yhooRefreshInProgress) return
+  // Backoff: skip if last failure was too recent
+  if (yhooRefreshBackoff > Date.now()) {
+    console.warn(`[Yahoo] Auth refresh skipped (backoff until ${new Date(yhooRefreshBackoff).toISOString()})`)
+    return
+  }
+  yhooRefreshInProgress = true
   try {
     const r1 = await fetch('https://fc.yahoo.com/', {
       headers: {
@@ -52,9 +61,14 @@ async function refreshYahooAuth() {
     if (!crumb || crumb.startsWith('{')) throw new Error('Bad crumb')
 
     yhoo = { crumb, cookie: cookieStr, ts: Date.now() }
+    yhooRefreshBackoff = 0
     console.log(`[Yahoo] Auth OK — crumb: ${crumb.slice(0, 6)}...`)
   } catch (e) {
-    console.warn('[Yahoo] Auth refresh failed:', e.message)
+    // Exponential backoff: 30s, 60s, 120s, max 5min
+    yhooRefreshBackoff = Date.now() + Math.min(300_000, 30_000 * Math.pow(2, Math.min(3, yhooRefreshBackoff ? 1 : 0)))
+    console.warn('[Yahoo] Auth refresh failed:', e.message, `— backoff until ${new Date(yhooRefreshBackoff).toISOString()}`)
+  } finally {
+    yhooRefreshInProgress = false
   }
 }
 
@@ -68,6 +82,17 @@ function rateLimit(name, maxPerMin) {
   return rl.count <= maxPerMin
 }
 
+// ── Origin validation (block external abuse of proxy routes) ─────────────────
+function validateOrigin(req, res, next) {
+  const origin = req.headers.origin || req.headers.referer || ''
+  const host = req.headers.host || ''
+  // Allow same-origin requests (no Origin header) and requests from our own host
+  if (!req.headers.origin || origin.includes(host) || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    return next()
+  }
+  return res.status(403).json({ error: 'Forbidden: cross-origin request blocked' })
+}
+
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express()
 
@@ -77,14 +102,37 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN')
   res.setHeader('X-XSS-Protection', '1; mode=block')
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' https: data: blob:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "font-src 'self'",
+    "frame-ancestors 'none'",
+  ].join('; '))
   next()
 })
 
 // ── Anthropic proxy (Claude AI) ───────────────────────────────────────────────
-app.use('/anthropic', (req, res, next) => {
+const ALLOWED_MODELS = ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001']
+const MAX_ANTHROPIC_TOKENS = 4096
+
+app.use('/anthropic', validateOrigin, express.json({ limit: '1mb' }), (req, res, next) => {
   if (!req.url.startsWith('/v1/messages')) return res.status(403).json({ error: 'Forbidden' })
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (!rateLimit('anthropic', 30)) return res.status(429).json({ error: 'Rate limit' })
+
+  // Validate request body to prevent cost abuse
+  const body = req.body
+  if (body) {
+    if (body.model && !ALLOWED_MODELS.includes(body.model)) {
+      return res.status(400).json({ error: `Model not allowed. Use: ${ALLOWED_MODELS.join(', ')}` })
+    }
+    if (body.max_tokens && body.max_tokens > MAX_ANTHROPIC_TOKENS) {
+      body.max_tokens = MAX_ANTHROPIC_TOKENS
+    }
+  }
   next()
 })
 
@@ -106,7 +154,7 @@ app.use('/anthropic', createProxyMiddleware({
 }))
 
 // ── Yahoo Finance proxy ───────────────────────────────────────────────────────
-app.use('/finance', (req, res, next) => {
+app.use('/finance', validateOrigin, (req, res, next) => {
   if (!rateLimit('finance', 600)) return res.status(429).json({ error: 'Rate limit' })
   next()
 })
@@ -133,6 +181,11 @@ app.use('/finance', createProxyMiddleware({
 }))
 
 // ── Fear & Greed proxy ────────────────────────────────────────────
+app.use('/fng', validateOrigin, (req, res, next) => {
+  if (!rateLimit('fng', 30)) return res.status(429).json({ error: 'Rate limit' })
+  next()
+})
+
 app.use('/fng', createProxyMiddleware({
   target: 'https://api.alternative.me',
   changeOrigin: true,
@@ -140,7 +193,7 @@ app.use('/fng', createProxyMiddleware({
 }))
 
 // ── CoinMarketCap proxy ───────────────────────────────────────────
-app.use('/cmc', (req, res, next) => {
+app.use('/cmc', validateOrigin, (req, res, next) => {
   if (!rateLimit('cmc', 30)) return res.status(429).json({ error: 'Rate limit' })
   next()
 })
@@ -160,7 +213,7 @@ app.use('/cmc', createProxyMiddleware({
 }))
 
 // ── CoinGecko proxy ───────────────────────────────────────────────────────────
-app.use('/coingecko', (req, res, next) => {
+app.use('/coingecko', validateOrigin, (req, res, next) => {
   if (!rateLimit('coingecko', 60)) return res.status(429).json({ error: 'Rate limit' })
   next()
 })

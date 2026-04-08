@@ -26,7 +26,7 @@ export default function NewsFeed({ news, loading }) {
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {news.map((item, i) => (
           <a
-            key={i}
+            key={item.link || item.title || i}
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"

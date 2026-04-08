@@ -13,98 +13,12 @@ import WatchlistNotes from '../components/WatchlistNotes.jsx'
 import CanadianTaxInfo from '../components/CanadianTaxInfo.jsx'
 import { useCurrency } from '../context/CurrencyContext.jsx'
 import { supabase, supabaseReady } from '../lib/supabase.js'
+import { displaySymbolText, getSectorColor } from '../utils/format.js'
+import LogoAvatar from '../components/LogoAvatar.jsx'
+import SharedSparkline from '../components/Sparkline.jsx'
 
-/* ── Sector Colors (use accent with alpha for dark mode compatibility) */
-const SECTOR_COLORS = {
-  'Financials':         { accent: '#3B82F6' },
-  'Technology':         { accent: '#8B5CF6' },
-  'Energy':             { accent: '#F97316' },
-  'Industrials':        { accent: '#14B8A6' },
-  'Materials':          { accent: '#F59E0B' },
-  'Telecom':            { accent: '#06B6D4' },
-  'Cons. Staples':      { accent: '#22C55E' },
-  'Cons. Discretionary':{ accent: '#FB7185' },
-  'Healthcare':         { accent: '#38BDF8' },
-  'Utilities':          { accent: '#FACC15' },
-}
-
-const getSectorColor = (sector) => {
-  const c = SECTOR_COLORS[sector]
-  if (!c) return { bg: 'var(--bg-muted)', text: 'var(--text-secondary)', accent: '#999' }
-  return { bg: `${c.accent}15`, text: c.accent, accent: c.accent }
-}
-
-/* ── Display Symbol (strip exchange suffixes) ─────────────────────── */
-function displaySymbolText(symbol) {
-  return symbol
-    .replace(/\.(TO|V|NE|CN|L|DE|T)$/i, '')
-    .replace(/-[A-Z]$/, s => ' ' + s.slice(1))
-}
-
-/* ── Mini Sparkline (SVG) ───────────────────────────────────────── */
-function Sparkline({ data, width = 80, height = 32, color }) {
-  try {
-    if (!data || !Array.isArray(data) || data.length < 2) return <div style={{ width, height }} />
-    const closes = data.map(d => typeof d === 'number' ? d : d?.close).filter(c => c != null && isFinite(c))
-    if (closes.length < 2) return <div style={{ width, height }} />
-
-    const min = Math.min(...closes)
-    const max = Math.max(...closes)
-    const range = max - min || 1
-    const pad = 2
-
-    const points = closes.map((c, i) => {
-      const x = pad + (i / (closes.length - 1)) * (width - pad * 2)
-      const y = pad + (1 - (c - min) / range) * (height - pad * 2)
-      return `${x},${y}`
-    }).join(' ')
-
-    const isUp = closes[closes.length - 1] >= closes[0]
-    const stroke = color || (isUp ? '#0A7C5C' : '#C0392B')
-
-    return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
-        <polyline
-          points={points}
-          fill="none"
-          stroke={stroke}
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    )
-  } catch {
-    return <div style={{ width, height }} />
-  }
-}
-
-/* ── Logo Avatar ─────────────────────────────────────────────────── */
-function LogoAvatar({ symbol, logoUrl, size = 36 }) {
-  const [failed, setFailed] = useState(false)
-  const letter = (symbol?.[0] ?? '?').toUpperCase()
-  if (logoUrl && !failed) {
-    return (
-      <img src={logoUrl} alt={symbol} onError={() => setFailed(true)}
-        style={{
-          width: size, height: size, borderRadius: size > 32 ? 10 : 6,
-          objectFit: 'contain', background: 'var(--bg-card)',
-          padding: 2, boxSizing: 'border-box', flexShrink: 0,
-          border: '1px solid var(--border)',
-        }} />
-    )
-  }
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: size > 32 ? 10 : 6,
-      background: 'var(--text)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.38, fontWeight: 600, color: '#FFFFFF', flexShrink: 0,
-    }}>
-      {letter}
-    </div>
-  )
-}
+// Use shared components — local aliases for backward compat
+const Sparkline = SharedSparkline
 
 /* ── Chart Tooltip ───────────────────────────────────────────────── */
 const ChartTooltip = ({ active, payload, label, sym }) => {

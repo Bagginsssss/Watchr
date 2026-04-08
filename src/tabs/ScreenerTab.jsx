@@ -813,6 +813,7 @@ export default function ScreenerTab() {
               🔍
             </span>
             <input
+              className="screener-search-input"
               type="text"
               value={searchQuery}
               onChange={e => {
@@ -820,7 +821,8 @@ export default function ScreenerTab() {
                 setSelectedResult(null)
               }}
               onFocus={() => { if (searchResults.length > 0) setSearchOpen(true) }}
-              placeholder="Search stocks, ETFs, or crypto..."
+              inputMode="search"
+              placeholder="Search any stock, ETF, or crypto worldwide..."
               style={{
                 width: '100%',
                 height: 52,
@@ -1220,6 +1222,32 @@ export default function ScreenerTab() {
           >
             + Show 25 More
           </button>
+        )}
+        {/* Prompt to use search when few results */}
+        {allFilteredStocks.length < 5 && (
+          <div style={{
+            marginTop: 20, padding: '20px 24px', borderRadius: 12,
+            background: 'var(--bg-card)', border: '1px solid var(--border)',
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>
+              Can't find what you're looking for?
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              Use the search bar above to find any stock, ETF, or crypto across all global exchanges — not just the ones listed here.
+            </div>
+            <button
+              onClick={() => {
+                const input = document.querySelector('.screener-search-input')
+                if (input) { input.focus(); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+              }}
+              style={{
+                padding: '10px 24px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                border: 'none', background: '#0A7C5C', color: '#fff', cursor: 'pointer',
+              }}
+            >
+              🔍 Search All Markets
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -319,24 +319,20 @@ export default function ScreenerTab() {
   const [selectedResult, setSelectedResult] = useState(null)
 
   // ── Screener State ────────────────────────────────────────────────────
-  const [allStocks, setAllStocks] = useState([])
-  const [stocksData, setStocksData] = useState({})
-  const [fetching, setFetching] = useState(false)
-  const [displayLimit, setDisplayLimit] = useState(25)
-
-  // Filter state
-  const [filterMarket, setFilterMarket] = useState('All')
+  const [filterMarket, setFilterMarket] = useState('TSX')
   const [filterSector, setFilterSector] = useState('All')
   const [sortBy, setSortBy] = useState('name')
   const [sortDesc, setSortDesc] = useState(false)
-
-  // Advanced filters
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [filterDivYieldMin, setFilterDivYieldMin] = useState(0)
-  const [filterDivYieldMax, setFilterDivYieldMax] = useState(15)
+  const [filterDivYieldMax, setFilterDivYieldMax] = useState(100)
   const [filterPEMin, setFilterPEMin] = useState(0)
-  const [filterPEMax, setFilterPEMax] = useState(100)
+  const [filterPEMax, setFilterPEMax] = useState(500)
   const [filterMarketCap, setFilterMarketCap] = useState('All')
+
+  const [stocksData, setStocksData] = useState({})
+  const [displayLimit, setDisplayLimit] = useState(25)
+  const [fetching, setFetching] = useState(false)
 
   // Watchlist
   const [watchlist, setWatchlist] = useState(() => {
@@ -387,49 +383,49 @@ export default function ScreenerTab() {
     return Array.from(sectors).sort()
   }, [])
 
-  // ── Get stocks to display ────────────────────────────────────────────
-  const allFilteredStocks = useMemo(() => {
+  // ── Build the full stock list from selected market + sector ──────────
+  const allStocks = useMemo(() => {
+    let list = []
+    if (filterMarket === 'All') {
+      Object.entries(MARKETS).forEach(([id, m]) => {
+        m.stocks.forEach(s => list.push({ ...s, market: id }))
+      })
+    } else {
+      const m = MARKETS[filterMarket]
+      if (m) list = m.stocks.map(s => ({ ...s, market: filterMarket }))
+    }
+    // Deduplicate
     const seen = new Set()
-    let result = allStocks
-      .map(s => ({ ...s, ...stocksData[s.symbol] }))
-      .filter(s => {
-        if (seen.has(s.symbol)) return false
-        seen.add(s.symbol)
+    list = list.filter(s => { if (seen.has(s.symbol)) return false; seen.add(s.symbol); return true })
+    // Filter by sector
+    if (filterSector !== 'All') list = list.filter(s => s.sector === filterSector)
+    return list
+  }, [filterMarket, filterSector])
+
+  // ── Enrich with fetched data, apply advanced filters, sort ───────────
+  const filteredStocks = useMemo(() => {
+    let result = allStocks.map(s => ({ ...s, ...(stocksData[s.symbol] || {}) }))
+
+    // Only apply metric filters if advanced mode is on
+    if (showAdvanced) {
+      result = result.filter(s => {
+        if (s.price == null) return true // haven't loaded yet, keep it
+        const dy = s.divYield ?? 0
+        const pe = s.pe ?? 0
+        if (dy < filterDivYieldMin || dy > filterDivYieldMax) return false
+        if (pe > 0 && (pe < filterPEMin || pe > filterPEMax)) return false
+        if (filterMarketCap !== 'All') {
+          const cap = s.marketCap ?? 0
+          if (filterMarketCap === 'Mega' && cap <= 200e9) return false
+          if (filterMarketCap === 'Large' && (cap < 10e9 || cap > 200e9)) return false
+          if (filterMarketCap === 'Mid' && (cap < 2e9 || cap >= 10e9)) return false
+          if (filterMarketCap === 'Small' && cap >= 2e9) return false
+        }
         return true
       })
-
-    if (filterMarket !== 'All') {
-      result = result.filter(s => s.market === filterMarket)
     }
 
-    if (filterSector !== 'All') {
-      result = result.filter(s => s.sector === filterSector)
-    }
-
-    // Advanced filters
-    result = result.filter(s => {
-      const dy = s.divYield ?? 0
-      return dy >= filterDivYieldMin && dy <= filterDivYieldMax
-    })
-
-    result = result.filter(s => {
-      const pe = s.pe ?? 0
-      return pe >= filterPEMin && pe <= filterPEMax
-    })
-
-    if (filterMarketCap !== 'All') {
-      result = result.filter(s => {
-        const cap = s.marketCap ?? 0
-        switch (filterMarketCap) {
-          case 'Mega': return cap > 200e9
-          case 'Large': return cap >= 10e9 && cap <= 200e9
-          case 'Mid': return cap >= 2e9 && cap < 10e9
-          case 'Small': return cap < 2e9
-          default: return true
-        }
-      })
-    }
-
+    // Sort
     result.sort((a, b) => {
       let aVal, bVal
       switch (sortBy) {
@@ -454,39 +450,21 @@ export default function ScreenerTab() {
     })
 
     return result
-  }, [allStocks, stocksData, filterMarket, filterSector, filterDivYieldMin, filterDivYieldMax, filterPEMin, filterPEMax, filterMarketCap, sortBy, sortDesc])
+  }, [allStocks, stocksData, showAdvanced, filterDivYieldMin, filterDivYieldMax, filterPEMin, filterPEMax, filterMarketCap, sortBy, sortDesc])
 
-  const stocks = useMemo(() => allFilteredStocks.slice(0, displayLimit), [allFilteredStocks, displayLimit])
+  const displayedStocks = useMemo(() => filteredStocks.slice(0, displayLimit), [filteredStocks, displayLimit])
 
-  // ── Load initial stock list ──────────────────────────────────────────
-  useEffect(() => {
-    const list = []
-    Object.entries(MARKETS).forEach(([marketId, market]) => {
-      market.stocks.forEach(stock => {
-        list.push({ ...stock, market: marketId })
-      })
-    })
-    setAllStocks(list)
-  }, [])
-
-  // ── Batch fetch metrics ──────────────────────────────────────────────
-  const [fetchedCount, setFetchedCount] = useState(0)
-  const BATCH_SIZE = 10
-  const INITIAL_LOAD = 25
-
-  const fetchMoreStocks = useCallback(async (stockList) => {
-    if (stockList.length === 0) return
+  // ── Batch fetch function ─────────────────────────────────────────────
+  const fetchBatch = useCallback(async (stocks) => {
+    if (stocks.length === 0) return
     setFetching(true)
 
-    for (let i = 0; i < stockList.length; i += BATCH_SIZE) {
-      const batch = stockList.slice(i, i + BATCH_SIZE)
+    for (let i = 0; i < stocks.length; i += 10) {
+      const batch = stocks.slice(i, i + 10)
       const results = await Promise.allSettled(
-        batch.map(async stock => {
-          const [quote, metrics] = await Promise.all([
-            fetchQuote(stock.symbol),
-            fetchMetrics(stock.symbol),
-          ])
-          return { symbol: stock.symbol, quote, metrics }
+        batch.map(async s => {
+          const [quote, metrics] = await Promise.all([fetchQuote(s.symbol), fetchMetrics(s.symbol)])
+          return { symbol: s.symbol, quote, metrics }
         })
       )
 
@@ -510,28 +488,27 @@ export default function ScreenerTab() {
         return next
       })
 
-      if (i + BATCH_SIZE < stockList.length) {
+      if (i + 10 < stocks.length) {
         await new Promise(r => setTimeout(r, 300))
       }
     }
     setFetching(false)
   }, [])
 
+  // ── Auto-fetch when market/sector changes ────────────────────────────
   useEffect(() => {
-    if (allStocks.length === 0) return
-    const toFetch = allStocks.filter(s => !stocksData[s.symbol]).slice(0, INITIAL_LOAD)
-    if (toFetch.length > 0) {
-      fetchMoreStocks(toFetch).then(() => setFetchedCount(prev => prev + toFetch.length))
-    }
-  }, [allStocks.length])
+    setDisplayLimit(25)
+    const toFetch = allStocks.filter(s => !stocksData[s.symbol]).slice(0, 25)
+    if (toFetch.length > 0) fetchBatch(toFetch)
+  }, [filterMarket, filterSector]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadMore = useCallback(() => {
-    const unfetched = allStocks.filter(s => !stocksData[s.symbol])
-    const nextBatch = unfetched.slice(0, 25)
-    if (nextBatch.length > 0) {
-      fetchMoreStocks(nextBatch).then(() => setFetchedCount(prev => prev + nextBatch.length))
-    }
-  }, [allStocks, stocksData, fetchMoreStocks])
+  // ── "Show 25 More" handler ───────────────────────────────────────────
+  const showMore = useCallback(() => {
+    const newLimit = displayLimit + 25
+    setDisplayLimit(newLimit)
+    const toFetch = allStocks.slice(displayLimit, newLimit).filter(s => !stocksData[s.symbol])
+    if (toFetch.length > 0) fetchBatch(toFetch)
+  }, [displayLimit, allStocks, stocksData, fetchBatch])
 
   // ── Toggle watchlist ─────────────────────────────────────────────────
   const toggleWatchlist = useCallback(symbol => {
@@ -547,21 +524,20 @@ export default function ScreenerTab() {
     setDisplayLimit(25)
     // Reset advanced filters to defaults first
     setFilterDivYieldMin(0)
-    setFilterDivYieldMax(15)
+    setFilterDivYieldMax(100)
     setFilterPEMin(0)
-    setFilterPEMax(100)
+    setFilterPEMax(500)
     setFilterMarketCap('All')
     setFilterMarket('All')
     setFilterSector('All')
+    setShowAdvanced(true)
 
     switch (preset) {
       case 'highDiv':
         setFilterDivYieldMin(4)
-        setShowAdvanced(true)
         break
       case 'value':
         setFilterPEMax(15)
-        setShowAdvanced(true)
         break
       case 'growth':
         setFilterSector('Technology')
@@ -569,7 +545,6 @@ export default function ScreenerTab() {
       case 'tsxLarge':
         setFilterMarket('TSX')
         setFilterMarketCap('Large')
-        setShowAdvanced(true)
         break
       case 'usTech':
         setFilterMarket('SP500')
@@ -913,6 +888,9 @@ export default function ScreenerTab() {
 
       {/* ═══════════════ SCREENER MODE ═══════════════ */}
 
+      {/* Divider */}
+      <div style={{ borderTop: '1px solid var(--border)', marginBottom: 20 }} />
+
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ margin: '0 0 6px 0', fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>
@@ -923,34 +901,12 @@ export default function ScreenerTab() {
         </p>
       </div>
 
-      {/* Quick Presets */}
-      <div className="screener-presets">
-        <button className="preset-btn" onClick={() => applyPreset('highDiv')}>
-          High Dividend (&gt;4%)
-        </button>
-        <button className="preset-btn" onClick={() => applyPreset('value')}>
-          Value (P/E &lt; 15)
-        </button>
-        <button className="preset-btn" onClick={() => applyPreset('growth')}>
-          Growth (Tech)
-        </button>
-        <button className="preset-btn" onClick={() => applyPreset('tsxLarge')}>
-          TSX Large Cap
-        </button>
-        <button className="preset-btn" onClick={() => applyPreset('usTech')}>
-          US Tech
-        </button>
-        <button className="preset-btn" onClick={() => applyPreset('defensive')}>
-          Defensive
-        </button>
-      </div>
-
       {/* Filter Bar */}
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
         <div className="screener-filters">
           <div className="screener-filter-group" style={{ minWidth: 150 }}>
             <label>Market</label>
-            <select value={filterMarket} onChange={e => { setFilterMarket(e.target.value); setDisplayLimit(25) }}>
+            <select value={filterMarket} onChange={e => setFilterMarket(e.target.value)}>
               <option value="All">All Markets</option>
               {['TSX', 'SP500', 'NASDAQ', 'FTSE100', 'DAX', 'NIKKEI', 'ETFs'].map(m => (
                 <option key={m} value={m}>
@@ -962,7 +918,7 @@ export default function ScreenerTab() {
 
           <div className="screener-filter-group" style={{ minWidth: 150 }}>
             <label>Sector</label>
-            <select value={filterSector} onChange={e => { setFilterSector(e.target.value); setDisplayLimit(25) }}>
+            <select value={filterSector} onChange={e => setFilterSector(e.target.value)}>
               <option value="All">All Sectors</option>
               {allSectors.map(sector => (
                 <option key={sector} value={sector}>{sector}</option>
@@ -1011,36 +967,40 @@ export default function ScreenerTab() {
             <div className="screener-filter-group" style={{ minWidth: 130 }}>
               <label>Div Yield Min %</label>
               <input
-                type="number" inputMode="decimal" min="0" max="15" step="0.5"
+                type="number" inputMode="decimal" min="0" max="100" step="0.5"
                 value={filterDivYieldMin}
                 onChange={e => setFilterDivYieldMin(parseFloat(e.target.value) || 0)}
+                style={{ fontSize: 16 }}
               />
             </div>
 
             <div className="screener-filter-group" style={{ minWidth: 130 }}>
               <label>Div Yield Max %</label>
               <input
-                type="number" inputMode="decimal" min="0" max="15" step="0.5"
+                type="number" inputMode="decimal" min="0" max="100" step="0.5"
                 value={filterDivYieldMax}
-                onChange={e => setFilterDivYieldMax(parseFloat(e.target.value) || 15)}
+                onChange={e => setFilterDivYieldMax(parseFloat(e.target.value) || 100)}
+                style={{ fontSize: 16 }}
               />
             </div>
 
             <div className="screener-filter-group" style={{ minWidth: 120 }}>
               <label>P/E Min</label>
               <input
-                type="number" inputMode="decimal" min="0" max="100" step="1"
+                type="number" inputMode="decimal" min="0" max="500" step="1"
                 value={filterPEMin}
                 onChange={e => setFilterPEMin(parseFloat(e.target.value) || 0)}
+                style={{ fontSize: 16 }}
               />
             </div>
 
             <div className="screener-filter-group" style={{ minWidth: 120 }}>
               <label>P/E Max</label>
               <input
-                type="number" inputMode="decimal" min="0" max="100" step="1"
+                type="number" inputMode="decimal" min="0" max="500" step="1"
                 value={filterPEMax}
-                onChange={e => setFilterPEMax(parseFloat(e.target.value) || 100)}
+                onChange={e => setFilterPEMax(parseFloat(e.target.value) || 500)}
+                style={{ fontSize: 16 }}
               />
             </div>
 
@@ -1056,6 +1016,34 @@ export default function ScreenerTab() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Quick Presets */}
+      <div className="screener-presets">
+        <button className="preset-btn" onClick={() => applyPreset('highDiv')}>
+          High Dividend (&gt;4%)
+        </button>
+        <button className="preset-btn" onClick={() => applyPreset('value')}>
+          Value (P/E &lt; 15)
+        </button>
+        <button className="preset-btn" onClick={() => applyPreset('growth')}>
+          Growth (Tech)
+        </button>
+        <button className="preset-btn" onClick={() => applyPreset('tsxLarge')}>
+          TSX Large Cap
+        </button>
+        <button className="preset-btn" onClick={() => applyPreset('usTech')}>
+          US Tech
+        </button>
+        <button className="preset-btn" onClick={() => applyPreset('defensive')}>
+          Defensive
+        </button>
+      </div>
+
+      {/* Results count */}
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+        Showing {displayedStocks.length} of {filteredStocks.length}
+        {fetching && <span style={{ color: 'var(--text-secondary)', marginLeft: 8 }}>Fetching...</span>}
       </div>
 
       {/* Results Table */}
@@ -1087,9 +1075,7 @@ export default function ScreenerTab() {
             </tr>
           </thead>
           <tbody>
-            {fetching && stocks.length === 0 && [1, 2, 3, 4, 5].map(i => <StockSkeleton key={i} />)}
-
-            {!fetching && stocks.length === 0 && (
+            {displayedStocks.length === 0 && !fetching && (
               <tr>
                 <td colSpan={9} style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
                   No stocks match your filters. Try adjusting your search criteria.
@@ -1097,7 +1083,7 @@ export default function ScreenerTab() {
               </tr>
             )}
 
-            {stocks.map(stock => {
+            {displayedStocks.map(stock => {
               const data = stocksData[stock.symbol]
               const hasData = data && data.price != null
               const changePercent = hasData && data.prevClose ? (data.change / data.prevClose) * 100 : 0
@@ -1146,7 +1132,7 @@ export default function ScreenerTab() {
                     {hasData && data.marketCap ? (
                       formatMarketCap(convert(data.marketCap, getMarketCurrency(stock.market)), sym)
                     ) : (
-                      <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 50, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
+                      hasData ? <span style={{ color: 'var(--text-muted)' }}>—</span> : <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 50, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>
 
@@ -1193,38 +1179,31 @@ export default function ScreenerTab() {
                 </tr>
               )
             })}
+
+            {/* Skeleton rows while fetching */}
+            {fetching && displayedStocks.filter(s => !stocksData[s.symbol]).length > 0 &&
+              Array.from({ length: Math.min(5, displayedStocks.filter(s => !stocksData[s.symbol]).length) }).map((_, i) => <StockSkeleton key={`skel-${i}`} />)
+            }
           </tbody>
         </table>
       </div>
 
       {/* Footer */}
       <div style={{ marginTop: 16, textAlign: 'center' }}>
-        {fetching && (
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
-            Fetching prices...
-          </div>
-        )}
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-          Showing {stocks.length} of {allFilteredStocks.length} results
-        </div>
-        {displayLimit < allFilteredStocks.length && (
+        {displayLimit < filteredStocks.length && (
           <button
-            onClick={() => {
-              setDisplayLimit(prev => prev + 25)
-              const unfetched = allStocks.filter(s => !stocksData[s.symbol])
-              if (unfetched.length > 0) loadMore()
-            }}
+            onClick={showMore}
             style={{
               padding: '12px 32px', borderRadius: 10, fontSize: 14, fontWeight: 600,
               border: '1px solid var(--border)', background: 'var(--bg-card)',
               color: 'var(--text)', cursor: 'pointer', transition: 'all 0.15s',
             }}
           >
-            + Show 25 More
+            + Show 25 More ({filteredStocks.length - displayLimit} remaining)
           </button>
         )}
         {/* Prompt to use search when few results */}
-        {allFilteredStocks.length < 5 && (
+        {filteredStocks.length < 5 && (
           <div style={{
             marginTop: 20, padding: '20px 24px', borderRadius: 12,
             background: 'var(--bg-card)', border: '1px solid var(--border)',

@@ -199,7 +199,7 @@ const BrokerageImport = ({ onClose, onImport }) => {
   };
 
   return (
-    <div style={{
+    <div className="modal-overlay" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -212,7 +212,7 @@ const BrokerageImport = ({ onClose, onImport }) => {
       zIndex: 1000,
       padding: '16px',
     }}>
-      <div style={{
+      <div className="modal-panel" style={{
         backgroundColor: 'var(--bg-card)',
         borderRadius: '12px',
         border: '1px solid var(--border)',

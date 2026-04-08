@@ -21,7 +21,7 @@ export default function MetricsGrid({ metrics, loading, stockCurrency = 'CAD' })
 
   if (loading) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+      <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
         {Array.from({ length: 14 }).map((_, i) => (
           <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
             <div className="skeleton" style={{ width: 60, height: 9, marginBottom: 6 }} />

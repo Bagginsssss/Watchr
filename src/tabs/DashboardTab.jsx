@@ -262,7 +262,7 @@ function PortfolioSnapshot({ user }) {
       <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 16, letterSpacing: 0.5, textTransform: 'uppercase' }}>
         Portfolio Snapshot
       </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, marginBottom: 24 }}>
+      <div className="dashboard-market-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, marginBottom: 24 }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
             Total Value
@@ -387,7 +387,7 @@ function TopMovers() {
         <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12, letterSpacing: 0.5, textTransform: 'uppercase' }}>
           Top Movers
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="dashboard-movers" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {Array.from({ length: 3 }).map((_, j) => <SkeletonCard key={j} />)}
@@ -464,7 +464,7 @@ function TopMovers() {
       <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12, letterSpacing: 0.5, textTransform: 'uppercase' }}>
         Top Movers
       </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="dashboard-movers" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         <div>
           <h4 style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)', marginBottom: 8, letterSpacing: 0.5, textTransform: 'uppercase' }}>
             Top Gainers

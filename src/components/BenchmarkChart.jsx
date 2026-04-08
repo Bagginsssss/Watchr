@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useMobile } from '../hooks/useMediaQuery.js';
 import {
   LineChart,
   Line,
@@ -15,6 +16,7 @@ import { useCurrency } from '../context/CurrencyContext.jsx';
 
 const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
   const { currency, convert, sym } = useCurrency();
+  const isMobile = useMobile();
   const [selectedBenchmark, setSelectedBenchmark] = useState('^GSPTSE');
   const [selectedRange, setSelectedRange] = useState('1Y');
   const [benchmarkData, setBenchmarkData] = useState(null);
@@ -325,7 +327,7 @@ const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
 
       {!loading && !error && chartData.length > 0 && (
         <>
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={isMobile ? 220 : 350}>
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorPortfolio" x1="0" y1="0" x2="0" y2="1">
@@ -373,7 +375,7 @@ const BenchmarkChart = ({ portfolioHistory, holdings, user }) => {
           </ResponsiveContainer>
 
           {/* Performance Summary Cards */}
-          <div style={{
+          <div className="benchmark-summary" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '16px',

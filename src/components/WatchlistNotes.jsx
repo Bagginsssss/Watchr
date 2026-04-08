@@ -167,9 +167,6 @@ const WatchlistNotes = ({ symbol, name, onClose }) => {
       flexDirection: 'column',
       zIndex: 1000,
       animation: 'slideInRight 0.3s ease-out',
-      '@media (max-width: 600px)': {
-        maxWidth: '100%',
-      },
     },
     header: {
       padding: '20px',
@@ -346,8 +343,8 @@ const WatchlistNotes = ({ symbol, name, onClose }) => {
 
   return (
     <>
-      <div style={styles.overlay} onClick={onClose} />
-      <div style={styles.panel}>
+      <div className="notes-panel-overlay" style={styles.overlay} onClick={onClose} />
+      <div className="notes-panel" style={styles.panel}>
         <div style={styles.header}>
           <div>
             <h2 style={styles.headerTitle}>{symbol}</h2>

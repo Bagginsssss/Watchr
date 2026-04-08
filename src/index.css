@@ -546,11 +546,16 @@ tr.hoverable:hover {
   }
 
   /* ── Top movers ── */
-  .movers-grid {
+  .movers-grid,
+  .dashboard-movers {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
     overflow-x: hidden !important;
     max-width: 100% !important;
+  }
+  .dashboard-market-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
   .mover-cards {
     display: flex !important;

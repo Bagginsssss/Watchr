@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useMobile } from '../hooks/useMediaQuery.js'
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceLine,
@@ -95,6 +96,9 @@ export default function CandlestickChart({
   height = 350,
   sym = '',
 }) {
+  const isMobile = useMobile()
+  const effectiveHeight = isMobile ? Math.min(height, 220) : height
+
   const chartData = useMemo(() => {
     if (!data.length) return []
     return maOverlays.length > 0 ? addMAOverlays(data, maOverlays) : data
@@ -111,7 +115,7 @@ export default function CandlestickChart({
   const tickInterval = Math.max(1, Math.floor(chartData.length / 8))
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={effectiveHeight}>
       <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.5} />
         <XAxis
@@ -125,7 +129,7 @@ export default function CandlestickChart({
           domain={[minPrice, maxPrice]}
           tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
           tickFormatter={v => `$${v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v.toFixed(v < 10 ? 2 : 0)}`}
-          width={60}
+          width={isMobile ? 45 : 60}
         />
         {showVolume && (
           <YAxis

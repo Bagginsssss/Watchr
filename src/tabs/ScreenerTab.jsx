@@ -79,6 +79,12 @@ function LogoAvatar({ symbol, size = 32 }) {
   )
 }
 
+/* ── Map market ID to native currency ────────────────────────────────── */
+function getMarketCurrency(marketId) {
+  const m = MARKETS[marketId]
+  return m?.defaultCurrency || 'USD'
+}
+
 /* ── 52-Week Range Indicator ─────────────────────────────────────────── */
 function WeekRange52({ price, low, high }) {
   if (!low || !high || !price) return <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</div>
@@ -197,7 +203,7 @@ function SearchDetailCard({ result, onAddWatchlist, isInWatchlist }) {
     { label: 'Market Cap', value: metrics.marketCap ? formatMarketCap(metrics.marketCap, sym) : '—' },
     { label: 'P/E', value: metrics.trailingPE ? formatNum(metrics.trailingPE, 1) : '—' },
     { label: 'Forward P/E', value: metrics.forwardPE ? formatNum(metrics.forwardPE, 1) : '—' },
-    { label: 'Div Yield', value: metrics.dividendYield ? formatPct(metrics.dividendYield) : '—' },
+    { label: 'Div Yield', value: metrics.dividendYield ? `${(metrics.dividendYield * 100).toFixed(2)}%` : '—' },
     { label: 'Beta', value: metrics.beta ? formatNum(metrics.beta, 2) : '—' },
     { label: '52W High', value: metrics.high52w ? `${sym}${formatNum(metrics.high52w, 2)}` : '—' },
     { label: '52W Low', value: metrics.low52w ? `${sym}${formatNum(metrics.low52w, 2)}` : '—' },
@@ -1112,7 +1118,7 @@ export default function ScreenerTab() {
                   <td className="price-cell">
                     {hasData ? (
                       <div style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-                        {sym}{convert(data.price, stock.market).toFixed(2)}
+                        {sym}{convert(data.price, getMarketCurrency(stock.market)).toFixed(2)}
                       </div>
                     ) : (
                       <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 60, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
@@ -1126,7 +1132,7 @@ export default function ScreenerTab() {
                         className={isPositive ? 'change-positive' : 'change-negative'}
                         style={{ fontFamily: "'IBM Plex Mono', monospace" }}
                       >
-                        {isPositive ? '+' : ''}{formatPct(changePercent / 100)}
+                        {isPositive ? '+' : ''}{changePercent.toFixed(2)}%
                       </div>
                     ) : (
                       <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 70, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
@@ -1136,7 +1142,7 @@ export default function ScreenerTab() {
                   {/* Market Cap */}
                   <td style={{ textAlign: 'right', fontFamily: "'IBM Plex Mono', monospace" }}>
                     {hasData && data.marketCap ? (
-                      formatMarketCap(convert(data.marketCap, stock.market), sym)
+                      formatMarketCap(convert(data.marketCap, getMarketCurrency(stock.market)), sym)
                     ) : (
                       <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 50, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
@@ -1151,7 +1157,7 @@ export default function ScreenerTab() {
 
                   {/* Dividend Yield */}
                   <td style={{ textAlign: 'right', fontWeight: 600, fontFamily: "'IBM Plex Mono', monospace", color: data && data.divYield > 0 ? 'var(--green)' : 'var(--text)' }}>
-                    {hasData ? (data.divYield > 0 ? formatPct(data.divYield / 100) : <span style={{ color: 'var(--text-muted)' }}>—</span>) : (
+                    {hasData ? (data.divYield > 0 ? `${data.divYield.toFixed(2)}%` : <span style={{ color: 'var(--text-muted)' }}>—</span>) : (
                       <div style={{ height: 16, background: 'var(--bg-hover)', borderRadius: 4, width: 40, animation: 'pulse 2s infinite', marginLeft: 'auto' }} />
                     )}
                   </td>

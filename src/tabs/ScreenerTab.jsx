@@ -331,7 +331,7 @@ export default function ScreenerTab() {
   const [filterMarketCap, setFilterMarketCap] = useState('All')
 
   const [stocksData, setStocksData] = useState({})
-  const [displayLimit, setDisplayLimit] = useState(25)
+  const [displayLimit, setDisplayLimit] = useState(10)
   const [fetching, setFetching] = useState(false)
 
   // Watchlist
@@ -508,14 +508,14 @@ export default function ScreenerTab() {
 
   // ── Auto-fetch when market/sector changes ────────────────────────────
   useEffect(() => {
-    setDisplayLimit(25)
-    const toFetch = allStocks.filter(s => !stocksData[s.symbol]).slice(0, 25)
+    setDisplayLimit(10)
+    const toFetch = allStocks.filter(s => !stocksData[s.symbol]).slice(0, 10)
     if (toFetch.length > 0) fetchBatch(toFetch)
   }, [filterMarket, filterSector]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── "Show 25 More" handler ───────────────────────────────────────────
+  // ── "Show More" handler ──────────────────────────────────────────────
   const showMore = useCallback(() => {
-    const newLimit = displayLimit + 25
+    const newLimit = displayLimit + 10
     setDisplayLimit(newLimit)
     const toFetch = allStocks.slice(displayLimit, newLimit).filter(s => !stocksData[s.symbol])
     if (toFetch.length > 0) fetchBatch(toFetch)
@@ -532,7 +532,7 @@ export default function ScreenerTab() {
 
   // ── Quick preset filters ─────────────────────────────────────────────
   const applyPreset = useCallback(preset => {
-    setDisplayLimit(25)
+    setDisplayLimit(10)
     // Reset advanced filters to defaults first
     setFilterDivYieldMin(0)
     setFilterDivYieldMax(100)
@@ -1210,7 +1210,7 @@ export default function ScreenerTab() {
               color: 'var(--text)', cursor: 'pointer', transition: 'all 0.15s',
             }}
           >
-            + Show 25 More ({filteredStocks.length - displayLimit} remaining)
+            + Show 10 More ({filteredStocks.length - displayLimit} remaining)
           </button>
         )}
         {/* Prompt to use search when few results */}

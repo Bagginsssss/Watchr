@@ -454,45 +454,56 @@ export default function ScreenerTab() {
 
   const displayedStocks = useMemo(() => filteredStocks.slice(0, displayLimit), [filteredStocks, displayLimit])
 
-  // ── Batch fetch function ─────────────────────────────────────────────
+  // ── Fast batch fetch — quotes first, metrics in background ───────────
   const fetchBatch = useCallback(async (stocks) => {
     if (stocks.length === 0) return
     setFetching(true)
 
-    for (let i = 0; i < stocks.length; i += 10) {
-      const batch = stocks.slice(i, i + 10)
-      const results = await Promise.allSettled(
-        batch.map(async s => {
-          const [quote, metrics] = await Promise.all([fetchQuote(s.symbol), fetchMetrics(s.symbol)])
-          return { symbol: s.symbol, quote, metrics }
-        })
-      )
+    // Phase 1: Fetch all quotes in parallel (fast — just price data)
+    const quoteResults = await Promise.allSettled(
+      stocks.map(s => fetchQuote(s.symbol))
+    )
 
-      setStocksData(prev => {
-        const next = { ...prev }
-        results.forEach(r => {
-          if (r.status === 'fulfilled') {
-            const { quote, metrics } = r.value
-            next[r.value.symbol] = {
-              price: quote.price,
-              prevClose: quote.prevClose,
-              change: quote.price - (quote.prevClose || quote.price),
-              marketCap: metrics.marketCap,
-              pe: metrics.trailingPE,
-              divYield: metrics.dividendYield ? metrics.dividendYield * 100 : 0,
-              high52w: metrics.high52w,
-              low52w: metrics.low52w,
-            }
+    // Update state immediately with price data
+    setStocksData(prev => {
+      const next = { ...prev }
+      stocks.forEach((s, i) => {
+        if (quoteResults[i].status === 'fulfilled') {
+          const quote = quoteResults[i].value
+          next[s.symbol] = {
+            ...(prev[s.symbol] || {}),
+            price: quote.price,
+            prevClose: quote.prevClose,
+            change: quote.price - (quote.prevClose || quote.price),
           }
-        })
-        return next
+        }
       })
-
-      if (i + 10 < stocks.length) {
-        await new Promise(r => setTimeout(r, 300))
-      }
-    }
+      return next
+    })
     setFetching(false)
+
+    // Phase 2: Fetch metrics in background (slower — P/E, div yield, etc.)
+    const metricsResults = await Promise.allSettled(
+      stocks.map(s => fetchMetrics(s.symbol))
+    )
+
+    setStocksData(prev => {
+      const next = { ...prev }
+      stocks.forEach((s, i) => {
+        if (metricsResults[i].status === 'fulfilled') {
+          const metrics = metricsResults[i].value
+          next[s.symbol] = {
+            ...(next[s.symbol] || {}),
+            marketCap: metrics.marketCap,
+            pe: metrics.trailingPE,
+            divYield: metrics.dividendYield ? metrics.dividendYield * 100 : 0,
+            high52w: metrics.high52w,
+            low52w: metrics.low52w,
+          }
+        }
+      })
+      return next
+    })
   }, [])
 
   // ── Auto-fetch when market/sector changes ────────────────────────────

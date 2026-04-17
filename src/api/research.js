@@ -1,4 +1,5 @@
 import { fetchNews } from './yahoo.js'
+import { apiUrl } from '../lib/apiBase.js'
 
 const BASE = '/finance'
 
@@ -17,8 +18,8 @@ async function fetchFundamentals(symbol) {
   const mods1 = 'summaryDetail,defaultKeyStatistics,financialData,price,earningsHistory'
   const mods2 = 'insiderTransactions,recommendationTrend,upgradeDowngradeHistory,institutionOwnership'
   const [r1, r2] = await Promise.all([
-    fetch(`${BASE}/v10/finance/quoteSummary/${encoded}?modules=${mods1}`),
-    fetch(`${BASE}/v10/finance/quoteSummary/${encoded}?modules=${mods2}`),
+    fetch(apiUrl(`${BASE}/v10/finance/quoteSummary/${encoded}?modules=${mods1}`)),
+    fetch(apiUrl(`${BASE}/v10/finance/quoteSummary/${encoded}?modules=${mods2}`)),
   ])
   if (!r1.ok) throw new Error(`Fundamentals fetch failed: ${r1.status}`)
   if (!r2.ok) throw new Error(`Fundamentals fetch failed: ${r2.status}`)
@@ -31,7 +32,7 @@ async function fetchFundamentals(symbol) {
 
 async function fetchPriceHistory(symbol) {
   validateResearchSymbol(symbol)
-  const res = await fetch(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`)
+  const res = await fetch(apiUrl(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`))
   if (!res.ok) throw new Error(`Price history fetch failed: ${res.status}`)
   const json = await res.json()
   const result = json.chart?.result?.[0]
@@ -385,7 +386,7 @@ function scoreShareholder(data) {
 
 async function callClaude(prompt) {
   // API key is injected server-side by the Vite proxy — never sent from the browser
-  const res = await fetch('/anthropic/v1/messages', {
+  const res = await fetch(apiUrl('/anthropic/v1/messages'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -409,7 +410,7 @@ async function callClaude(prompt) {
  * @returns {string} Claude's text response
  */
 export async function callClaudeVision(prompt, base64Data, mediaType = 'image/png') {
-  const res = await fetch('/anthropic/v1/messages', {
+  const res = await fetch(apiUrl('/anthropic/v1/messages'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

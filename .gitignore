@@ -8,7 +8,9 @@ package-lock 2.json
 
 # Capacitor / iOS
 ios/Pods/
+ios/App/App/public/
 ios/.idea/
 *.xcworkspace/xcuserdata/
+xcuserdata/
 DerivedData/
 *.ipa

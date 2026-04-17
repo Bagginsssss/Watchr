@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, CartesianGrid } from 'recharts'
 import ChartDragOverlay from '../components/ChartDragOverlay.jsx'
+import { apiUrl } from '../lib/apiBase.js'
 
 const AVATAR_COLORS = ['var(--text)','#0A7C5C','#3A5A8A','#7A4040','#6B4F8A','#8B6914','#2D6A4F','#5A3080']
 
@@ -42,7 +43,7 @@ import { searchSymbol, fetchMetrics, fetchNews } from '../api/yahoo.js'
 
 // ── API ────────────────────────────────────────────────────────────────────────
 async function fetchLiveQuote(symbol) {
-  const res = await fetch(`/finance/v8/finance/chart/${symbol}?interval=1d&range=1d`)
+  const res = await fetch(apiUrl(`/finance/v8/finance/chart/${symbol}?interval=1d&range=1d`))
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   const r = json.chart?.result?.[0]
@@ -70,7 +71,7 @@ async function fetchFullFundamentals(symbol) {
     'cashflowStatementHistory,cashflowStatementHistoryQuarterly',
     'recommendationTrend,upgradeDowngradeHistory',
   ].join(',')
-  const res = await fetch(`/finance/v10/finance/quoteSummary/${symbol}?modules=${mods}`)
+  const res = await fetch(apiUrl(`/finance/v10/finance/quoteSummary/${symbol}?modules=${mods}`))
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const json = await res.json()
   return json.quoteSummary?.result?.[0] ?? {}
@@ -631,7 +632,7 @@ function ChartTab({ symbol }) {
   useEffect(() => {
     if (!symbol) return
     setLoading(true)
-    fetch(`/finance/v8/finance/chart/${symbol}?interval=${range.interval}&range=${range.range}`)
+    fetch(apiUrl(`/finance/v8/finance/chart/${symbol}?interval=${range.interval}&range=${range.range}`))
       .then(r => r.json())
       .then(json => {
         const result = json.chart?.result?.[0]

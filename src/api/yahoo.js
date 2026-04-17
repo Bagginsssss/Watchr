@@ -1,4 +1,5 @@
 import { quoteCache, historyCache, metricsCache, newsCache, searchCache, withCache } from '../lib/cache.js'
+import { apiUrl } from '../lib/apiBase.js'
 
 const BASE = '/finance'
 
@@ -13,7 +14,7 @@ function validateSymbol(symbol) {
 
 async function _fetchQuote(symbol) {
   validateSymbol(symbol)
-  const res = await fetch(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`)
+  const res = await fetch(apiUrl(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`))
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   const result = json.chart?.result?.[0]
@@ -68,7 +69,7 @@ function _parseChartResult(json, interval) {
 // Returns backwards-compatible array of { date, close } points
 async function _fetchHistory(symbol, range, interval) {
   validateSymbol(symbol)
-  const res = await fetch(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${encodeURIComponent(interval)}&range=${encodeURIComponent(range)}`)
+  const res = await fetch(apiUrl(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${encodeURIComponent(interval)}&range=${encodeURIComponent(range)}`))
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   return _parseChartResult(json, interval).points
@@ -77,7 +78,7 @@ async function _fetchHistory(symbol, range, interval) {
 // Returns full OHLCV data for candlestick charts
 async function _fetchHistoryFull(symbol, range, interval) {
   validateSymbol(symbol)
-  const res = await fetch(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${encodeURIComponent(interval)}&range=${encodeURIComponent(range)}`)
+  const res = await fetch(apiUrl(`${BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${encodeURIComponent(interval)}&range=${encodeURIComponent(range)}`))
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   return _parseChartResult(json, interval)
@@ -86,7 +87,7 @@ async function _fetchHistoryFull(symbol, range, interval) {
 async function _fetchMetrics(symbol) {
   validateSymbol(symbol)
   const modules = 'summaryDetail,defaultKeyStatistics,financialData,price'
-  const res = await fetch(`${BASE}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${modules}`)
+  const res = await fetch(apiUrl(`${BASE}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${modules}`))
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   const result = json.quoteSummary?.result?.[0]
@@ -123,7 +124,7 @@ async function _fetchMetrics(symbol) {
 async function _fetchNews(symbol) {
   validateSymbol(symbol)
   const q = symbol.replaceAll('.TO', '').replaceAll('.V', '').replaceAll('^', '').replaceAll('-', '')
-  const res = await fetch(`${BASE}/v1/finance/search?q=${encodeURIComponent(q)}&newsCount=6&enableFuzzyQuery=false&enableEnhancedTrivialQuery=true`)
+  const res = await fetch(apiUrl(`${BASE}/v1/finance/search?q=${encodeURIComponent(q)}&newsCount=6&enableFuzzyQuery=false&enableEnhancedTrivialQuery=true`))
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   return (json.news ?? []).map(n => ({
@@ -137,7 +138,7 @@ async function _fetchNews(symbol) {
 
 async function _searchSymbol(query) {
   if (!query || query.trim().length < 1) return []
-  const res = await fetch(`${BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15&newsCount=0&enableFuzzyQuery=true&enableEnhancedTrivialQuery=true`)
+  const res = await fetch(apiUrl(`${BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=15&newsCount=0&enableFuzzyQuery=true&enableEnhancedTrivialQuery=true`))
   if (!res.ok) throw new Error(`${res.status}`)
   const json = await res.json()
   return (json.quotes ?? [])
@@ -197,7 +198,7 @@ export async function fetchQuotesBulk(symbols) {
   const valid = symbols.filter(s => VALID_SYMBOL.test(s))
   if (valid.length === 0) return {}
 
-  const res = await fetch(`${BASE}/v7/finance/quote?symbols=${valid.map(encodeURIComponent).join(',')}`)
+  const res = await fetch(apiUrl(`${BASE}/v7/finance/quote?symbols=${valid.map(encodeURIComponent).join(',')}`))
   if (!res.ok) throw new Error(`Bulk quote failed: ${res.status}`)
   const json = await res.json()
   const results = json.quoteResponse?.result ?? []

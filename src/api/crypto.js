@@ -1,6 +1,7 @@
 import { CRYPTO_LIST } from '../data/crypto.js'
 import { fetchQuote, fetchHistory } from './yahoo.js'
 import { cmcListingsCache, cmcMetadataCache, fearGreedCache } from '../lib/cache.js'
+import { apiUrl } from '../lib/apiBase.js'
 
 const CMC_BASE = '/cmc'
 
@@ -36,7 +37,7 @@ export async function fetchCryptoMarkets() {
 }
 
 async function _fetchViaCMC() {
-  const res = await fetch(`${CMC_BASE}/v1/cryptocurrency/listings/latest?limit=50&convert=USD`)
+  const res = await fetch(apiUrl(`${CMC_BASE}/v1/cryptocurrency/listings/latest?limit=50&convert=USD`))
   if (!res.ok) throw new Error(`CMC ${res.status}`)
   const json = await res.json()
   if (json.status?.error_code) throw new Error(json.status.error_message || 'CMC error')
@@ -131,7 +132,7 @@ export async function fetchCryptoHistory(id, days) {
 export async function fetchGlobalStats() {
   return cachedFetch(cmcListingsCache, 'globalStats', async () => {
     try {
-      const res = await fetch(`${CMC_BASE}/v1/global-metrics/quotes/latest`)
+      const res = await fetch(apiUrl(`${CMC_BASE}/v1/global-metrics/quotes/latest`))
       if (!res.ok) throw new Error(`CMC global ${res.status}`)
       const json = await res.json()
       const d = json.data
@@ -169,7 +170,7 @@ export async function fetchGlobalStats() {
 export async function fetchCoinMetadata(cmcIds) {
   const key = `metadata:${cmcIds.join(',')}`
   return cachedFetch(cmcMetadataCache, key, async () => {
-    const res = await fetch(`${CMC_BASE}/v2/cryptocurrency/info?id=${cmcIds.join(',')}`)
+    const res = await fetch(apiUrl(`${CMC_BASE}/v2/cryptocurrency/info?id=${cmcIds.join(',')}`))
     if (!res.ok) throw new Error(`CMC info ${res.status}`)
     const json = await res.json()
     const result = {}
@@ -191,7 +192,7 @@ export async function fetchCoinMetadata(cmcIds) {
 // ── Fear & Greed Index (alternative.me — free, no auth) ───────────────────────
 export async function fetchFearGreedIndex() {
   return cachedFetch(fearGreedCache, 'fearGreed', async () => {
-    const res = await fetch('/fng/fng/?limit=1&format=json')
+    const res = await fetch(apiUrl('/fng/fng/?limit=1&format=json'))
     if (!res.ok) throw new Error(`F&G ${res.status}`)
     const json = await res.json()
     const d = json.data?.[0]

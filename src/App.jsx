@@ -109,7 +109,7 @@ function AppContent() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)', position: 'fixed', inset: 0, maxWidth: '100vw' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--bg)', position: 'fixed', inset: 0, maxWidth: '100vw', paddingTop: 'env(safe-area-inset-top)' }}>
 
       <MarketBar />
 

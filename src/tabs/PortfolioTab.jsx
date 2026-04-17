@@ -11,6 +11,7 @@ import BenchmarkChart from '../components/BenchmarkChart.jsx'
 import BrokerageImport from '../components/BrokerageImport.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import SharedLogoAvatar from '../components/LogoAvatar.jsx'
+import { apiUrl } from '../lib/apiBase.js'
 
 const CHART_RANGES = [
   { label: '1D', range: '1d',  interval: '5m' },
@@ -861,7 +862,7 @@ export default function PortfolioTab({ user }) {
     const results = await Promise.all(
       holdingsList.map(async h => {
         try {
-          const res = await fetch(`/finance/v10/finance/quoteSummary/${h.symbol}?modules=quoteType,assetProfile,fundProfile`)
+          const res = await fetch(apiUrl(`/finance/v10/finance/quoteSummary/${h.symbol}?modules=quoteType,assetProfile,fundProfile`))
           const json = await res.json()
           const r = json.quoteSummary?.result?.[0]
           const qt = r?.quoteType?.quoteType

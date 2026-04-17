@@ -92,6 +92,7 @@ export function useAlerts(user) {
         .from('price_alerts')
         .update({ triggered: true, triggered_at: new Date().toISOString() })
         .eq('id', alert.id)
+        .eq('user_id', user.id)
         .catch(err => console.warn('[Alerts] Failed to update alert:', err.message))
     }
 

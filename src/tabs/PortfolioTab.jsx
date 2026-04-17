@@ -893,9 +893,11 @@ export default function PortfolioTab({ user }) {
 
   async function handleSave(data) {
     if (editingHolding) {
-      await supabase.from('holdings').update({ ...data, updated_at: new Date().toISOString() }).eq('id', editingHolding.id)
+      const { error } = await supabase.from('holdings').update({ ...data, updated_at: new Date().toISOString() }).eq('id', editingHolding.id).eq('user_id', user.id)
+      if (error) console.error('[Portfolio] Failed to update holding:', error.message)
     } else {
-      await supabase.from('holdings').insert({ ...data, user_id: user.id })
+      const { error } = await supabase.from('holdings').insert({ ...data, user_id: user.id })
+      if (error) console.error('[Portfolio] Failed to insert holding:', error.message)
     }
     setShowAddModal(false)
     setEditingHolding(null)
@@ -912,7 +914,8 @@ export default function PortfolioTab({ user }) {
 
   async function handleDelete(id) {
     if (!confirm('Remove this holding?')) return
-    await supabase.from('holdings').delete().eq('id', id)
+    const { error } = await supabase.from('holdings').delete().eq('id', id).eq('user_id', user.id)
+    if (error) console.error('[Portfolio] Failed to delete holding:', error.message)
     fetchHoldings()
   }
 

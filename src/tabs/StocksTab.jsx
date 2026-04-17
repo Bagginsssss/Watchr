@@ -587,6 +587,7 @@ export default function StocksTab({ user, username, onRequestAuth, onCreateAlert
       const { data } = await supabase
         .from('holdings')
         .select('symbol, name')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true })
       if (data) setPortfolioHoldings(data)
     } catch {}

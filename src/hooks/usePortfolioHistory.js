@@ -25,14 +25,11 @@ export function usePortfolioHistory(user) {
 
   useEffect(() => { loadHistory() }, [loadHistory])
 
-  // Take today's snapshot (upsert to avoid duplicates)
+  // Upsert today's snapshot — overwrites on every call so the chart's
+  // latest bar always matches the live market-value card above it.
   const takeSnapshot = useCallback(async (totalValue, totalCost) => {
     if (!supabaseReady || !user || totalValue <= 0) return
     const today = new Date().toISOString().slice(0, 10)
-
-    // Check if we already have today's snapshot
-    const existing = history.find(h => h.snapshot_date === today)
-    if (existing) return // Already snapshotted today
 
     const { data, error } = await supabase
       .from('portfolio_snapshots')
@@ -51,7 +48,7 @@ export function usePortfolioHistory(user) {
         return [...filtered, data].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date))
       })
     }
-  }, [user, history])
+  }, [user])
 
   // Filter history by range
   const getFilteredHistory = useCallback((range) => {

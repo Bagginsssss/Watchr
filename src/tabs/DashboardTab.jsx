@@ -13,12 +13,8 @@ import Sparkline from '../components/Sparkline.jsx'
    ──────────────────────────────────────────────────────────────────── */
 function SkeletonCard() {
   return (
-    <div style={{
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
-      borderRadius: 12,
-      padding: '16px',
-      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+    <div className="skeleton" style={{
+      borderRadius: 'var(--radius-md)',
       minHeight: 120,
     }} />
   )
@@ -173,7 +169,8 @@ function PortfolioSnapshot({ user }) {
 
         if (sError) throw sError
 
-        // Calculate portfolio value from holdings
+        // Calculate portfolio value from holdings — convert each row from its
+        // native currency to the user's display currency so we don't mix CAD/USD.
         if (holdings && holdings.length > 0) {
           let totalValue = 0
           let totalCost = 0
@@ -184,13 +181,13 @@ function PortfolioSnapshot({ user }) {
               const q = await fetchQuote(h.symbol)
               const shares = h.shares || 0
               const avgCost = h.avg_cost || 0
-              const currentValue = q.price * shares
-              const costValue = avgCost * shares
+              const native = q.currency ?? 'USD'
+              const currentValue = convert(q.price * shares, native) ?? 0
+              const costValue    = convert(avgCost * shares, native) ?? 0
               totalValue += currentValue
-              totalCost += costValue
-              // Daily change: (price - prevClose) * shares
+              totalCost  += costValue
               if (q.prevClose) {
-                dailyPL += (q.price - q.prevClose) * shares
+                dailyPL += convert((q.price - q.prevClose) * shares, native) ?? 0
               }
             } catch (err) {
               console.warn(`Failed to load quote for ${h.symbol}:`, err)
@@ -232,22 +229,28 @@ function PortfolioSnapshot({ user }) {
 
   if (!portfolio) {
     return (
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderRadius: 12,
-        padding: '24px',
-        textAlign: 'center',
-        color: 'var(--text-secondary)',
-        marginBottom: 32,
-      }}>
-        <p>No holdings yet. Add stocks to get started!</p>
+      <div className="surface" style={{ marginBottom: 32 }}>
+        <div className="empty-state">
+          <div className="empty-state-icon">💼</div>
+          <div className="empty-state-title">Your portfolio is empty</div>
+          <div className="empty-state-body">
+            Track gains, dividends, and daily changes by adding your first holding.
+          </div>
+          <button
+            className="btn btn-primary btn-sm smooth"
+            style={{ marginTop: 12 }}
+            onClick={() => window.dispatchEvent(new CustomEvent('watchr:switch-tab', { detail: { tab: 'portfolio' } }))}
+          >
+            Add a holding
+          </button>
+        </div>
       </div>
     )
   }
 
-  const displayValue = convert(portfolio.totalValue, 'USD')
-  const displayPL = convert(portfolio.totalPL, 'USD')
+  // totalValue / totalPL already in display currency — do not re-convert.
+  const displayValue = portfolio.totalValue
+  const displayPL = portfolio.totalPL
   const isUp = portfolio.totalPL >= 0
 
   return (
@@ -287,7 +290,7 @@ function PortfolioSnapshot({ user }) {
             Daily Change
           </div>
           <div style={{ fontSize: 24, fontWeight: 700, color: portfolio.dailyPL >= 0 ? 'var(--green)' : 'var(--red)' }}>
-            {portfolio.dailyPL >= 0 ? '+' : ''}{sym}{convert(Math.abs(portfolio.dailyPL), 'USD')?.toFixed(2) ?? '0.00'}
+            {portfolio.dailyPL >= 0 ? '+' : ''}{sym}{Math.abs(portfolio.dailyPL).toFixed(2)}
           </div>
           <div style={{ fontSize: 12, color: portfolio.dailyPL >= 0 ? 'var(--green)' : 'var(--red)', marginTop: 4 }}>
             {portfolio.dailyPL >= 0 ? '↑' : '↓'} {Math.abs(portfolio.dailyPLPct).toFixed(2)}%
@@ -400,16 +403,21 @@ function TopMovers() {
 
   if (movers.gainers.length === 0 && movers.losers.length === 0) {
     return (
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderRadius: 12,
-        padding: '24px',
-        textAlign: 'center',
-        color: 'var(--text-secondary)',
-        marginBottom: 32,
-      }}>
-        <p>Add stocks to your watchlist to see top movers.</p>
+      <div className="surface" style={{ marginBottom: 32 }}>
+        <div className="empty-state">
+          <div className="empty-state-icon">📊</div>
+          <div className="empty-state-title">No movers to show yet</div>
+          <div className="empty-state-body">
+            Add stocks to your watchlist and we'll surface the biggest daily gainers and losers here.
+          </div>
+          <button
+            className="btn btn-ghost btn-sm smooth"
+            style={{ marginTop: 12 }}
+            onClick={() => window.dispatchEvent(new CustomEvent('watchr:switch-tab', { detail: { tab: 'stocks' } }))}
+          >
+            Browse stocks
+          </button>
+        </div>
       </div>
     )
   }

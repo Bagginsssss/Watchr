@@ -4,7 +4,7 @@ import { useCurrency } from '../context/CurrencyContext.jsx'
 const RECOMMEND_COLOR = {
   buy: '#0A7C5C', strong_buy: '#0A7C5C',
   hold: '#B8860B',
-  sell: '#C0392B', strong_sell: '#C0392B',
+  sell: '#EF4444', strong_sell: '#EF4444',
 }
 
 function Cell({ label, value, color }) {
@@ -69,12 +69,12 @@ export default function MetricsGrid({ metrics, loading, stockCurrency = 'CAD' })
     { label: 'EPS (TTM)',        value: metrics.eps        ? fmtPrice(metrics.eps)          : '—' },
     { label: 'Price / Book',     value: metrics.priceToBook ? formatNum(metrics.priceToBook) : '—' },
     { label: '52W High',         value: fmtPrice(metrics.high52w), color: '#0A7C5C' },
-    { label: '52W Low',          value: fmtPrice(metrics.low52w),  color: '#C0392B' },
+    { label: '52W Low',          value: fmtPrice(metrics.low52w),  color: '#EF4444' },
     { label: 'Dividend Yield',   value: metrics.dividendYield ? formatPct(metrics.dividendYield) : '—', color: '#B8860B' },
     { label: 'Annual Dividend',  value: metrics.dividendRate  ? fmtPrice(metrics.dividendRate)   : '—', color: '#B8860B' },
     { label: 'Beta',             value: metrics.beta ? formatNum(metrics.beta) : '—' },
-    { label: 'Profit Margin',    value: metrics.profitMargin  ? formatPct(metrics.profitMargin)  : '—', color: metrics.profitMargin > 0 ? '#0A7C5C' : '#C0392B' },
-    { label: 'Revenue Growth',   value: metrics.revenueGrowth ? formatPct(metrics.revenueGrowth) : '—', color: metrics.revenueGrowth > 0 ? '#0A7C5C' : '#C0392B' },
+    { label: 'Profit Margin',    value: metrics.profitMargin  ? formatPct(metrics.profitMargin)  : '—', color: metrics.profitMargin > 0 ? '#0A7C5C' : '#EF4444' },
+    { label: 'Revenue Growth',   value: metrics.revenueGrowth ? formatPct(metrics.revenueGrowth) : '—', color: metrics.revenueGrowth > 0 ? '#0A7C5C' : '#EF4444' },
     { label: 'Gross Margin',     value: metrics.grossMargin   ? formatPct(metrics.grossMargin)   : '—' },
     { label: 'Analyst Rating',   value: recLabel, color: recColor },
     { label: 'Price Target',     value: fmtPrice(metrics.targetMeanPrice) },

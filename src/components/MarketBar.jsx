@@ -33,7 +33,7 @@ export default function MarketBar() {
 
   function renderItem(idx, i) {
     const isUp = (idx.changePct ?? 0) >= 0
-    const changeColor = isUp ? '#0A7C5C' : '#C0392B'
+    const changeColor = isUp ? '#0A7C5C' : '#EF4444'
     return (
       <div
         key={`${idx.symbol}-${i}`}

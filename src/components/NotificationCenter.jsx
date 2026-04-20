@@ -68,7 +68,7 @@ export default function NotificationCenter({ alerts, activeCount, triggeredCount
           <span style={{
             position: 'absolute', top: -4, right: -4,
             minWidth: 18, height: 18, borderRadius: 9,
-            background: triggeredCount > 0 ? '#C0392B' : '#0A7C5C',
+            background: triggeredCount > 0 ? '#EF4444' : '#0A7C5C',
             color: '#fff', fontSize: 10, fontWeight: 700,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             padding: '0 4px', border: '2px solid var(--bg-card)',
@@ -122,7 +122,7 @@ export default function NotificationCenter({ alerts, activeCount, triggeredCount
                 {t.count > 0 && (
                   <span style={{
                     background: t.id === 'triggered' ? 'rgba(192,57,43,0.1)' : 'rgba(10,124,92,0.1)',
-                    color: t.id === 'triggered' ? '#C0392B' : '#0A7C5C',
+                    color: t.id === 'triggered' ? '#EF4444' : '#0A7C5C',
                     fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
                   }}>{t.count}</span>
                 )}
@@ -176,7 +176,7 @@ export default function NotificationCenter({ alerts, activeCount, triggeredCount
                       <span style={{
                         fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
                         background: alert.direction === 'above' ? 'rgba(10,124,92,0.08)' : 'rgba(192,57,43,0.08)',
-                        color: alert.direction === 'above' ? '#0A7C5C' : '#C0392B',
+                        color: alert.direction === 'above' ? '#0A7C5C' : '#EF4444',
                         textTransform: 'uppercase',
                       }}>
                         {alert.direction} ${targetPrice}
@@ -209,7 +209,7 @@ export default function NotificationCenter({ alerts, activeCount, triggeredCount
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all 0.15s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(192,57,43,0.08)'; e.currentTarget.style.color = '#C0392B' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(192,57,43,0.08)'; e.currentTarget.style.color = '#EF4444' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-muted)' }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

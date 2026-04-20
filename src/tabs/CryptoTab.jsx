@@ -23,7 +23,7 @@ function formatSupply(v, symbol) {
 
 // ── Fear & Greed gauge colors ─────────────────────────────────────────────────
 function fgColor(val) {
-  if (val <= 25) return '#C0392B'
+  if (val <= 25) return '#EF4444'
   if (val <= 45) return '#E67E22'
   if (val <= 55) return '#F1C40F'
   if (val <= 75) return '#27AE60'
@@ -93,7 +93,7 @@ export default function CryptoTab() {
   const selectedMeta = metadata[CRYPTO_LIST.find(c => c.id === selected)?.cmcId]
   const pct24h = selectedCoin?.price_change_percentage_24h ?? 0
   const isUp = pct24h >= 0
-  const lineColor = isUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = isUp ? '#0A7C5C' : '#EF4444'
 
   const gainers = useMemo(() =>
     [...coins].sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0)).slice(0, 5)
@@ -227,7 +227,7 @@ export default function CryptoTab() {
                     </div>
                   )}
                   <div>
-                    <div style={{ fontSize: 22, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-0.5px' }}>
+                    <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.4px' }}>
                       {selectedCoin.name}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
@@ -236,7 +236,7 @@ export default function CryptoTab() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 28, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-1px' }}>
+                  <div style={{ fontSize: 28, fontWeight: 500, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.8px' }}>
                     {fmt(selectedCoin.current_price)}
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: lineColor }}>
@@ -318,9 +318,9 @@ export default function CryptoTab() {
                   { label: 'Total Supply', val: selectedCoin.total_supply != null ? formatSupply(selectedCoin.total_supply, selectedCoin.symbol?.toUpperCase()) : '—' },
                   { label: 'Max Supply', val: selectedCoin.max_supply != null ? formatSupply(selectedCoin.max_supply, selectedCoin.symbol?.toUpperCase()) : '∞' },
                   { label: '7d Change', val: selectedCoin.price_change_percentage_7d_in_currency != null ? `${selectedCoin.price_change_percentage_7d_in_currency >= 0 ? '+' : ''}${selectedCoin.price_change_percentage_7d_in_currency.toFixed(2)}%` : '—',
-                    color: (selectedCoin.price_change_percentage_7d_in_currency ?? 0) >= 0 ? '#0A7C5C' : '#C0392B' },
+                    color: (selectedCoin.price_change_percentage_7d_in_currency ?? 0) >= 0 ? '#0A7C5C' : '#EF4444' },
                   { label: '1h Change', val: selectedCoin.price_change_percentage_1h_in_currency != null ? `${selectedCoin.price_change_percentage_1h_in_currency >= 0 ? '+' : ''}${selectedCoin.price_change_percentage_1h_in_currency.toFixed(2)}%` : '—',
-                    color: (selectedCoin.price_change_percentage_1h_in_currency ?? 0) >= 0 ? '#0A7C5C' : '#C0392B' },
+                    color: (selectedCoin.price_change_percentage_1h_in_currency ?? 0) >= 0 ? '#0A7C5C' : '#EF4444' },
                   { label: '24h Change', val: `${pct24h >= 0 ? '+' : ''}${pct24h.toFixed(2)}%`, color: lineColor },
                   { label: 'Data Source', val: selectedCoin._source === 'cmc' ? 'CoinMarketCap' : selectedCoin._source === 'yahoo' ? 'Yahoo Finance' : 'Live' },
                 ].map(({ label, val, color }) => (
@@ -367,9 +367,9 @@ export default function CryptoTab() {
                 style={{
                   flex: 1, padding: '12px', border: 'none', cursor: 'pointer',
                   background: moverTab === tab ? 'var(--bg-card)' : 'var(--bg-muted)',
-                  color: moverTab === tab ? (tab === 'gainers' ? '#0A7C5C' : '#C0392B') : 'var(--text-muted)',
+                  color: moverTab === tab ? (tab === 'gainers' ? '#0A7C5C' : '#EF4444') : 'var(--text-muted)',
                   fontSize: 13, fontWeight: 600,
-                  borderBottom: moverTab === tab ? `2px solid ${tab === 'gainers' ? '#0A7C5C' : '#C0392B'}` : '2px solid transparent',
+                  borderBottom: moverTab === tab ? `2px solid ${tab === 'gainers' ? '#0A7C5C' : '#EF4444'}` : '2px solid transparent',
                 }}>
                 {tab === 'gainers' ? '▲ Top Gainers' : '▼ Top Losers'}
               </button>
@@ -395,7 +395,7 @@ export default function CryptoTab() {
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{fmt(coin.current_price)}</div>
                   <div style={{
-                    fontSize: 12, fontWeight: 600, color: up ? '#0A7C5C' : '#C0392B',
+                    fontSize: 12, fontWeight: 600, color: up ? '#0A7C5C' : '#EF4444',
                     background: up ? 'rgba(10,124,92,0.08)' : 'rgba(192,57,43,0.08)',
                     padding: '1px 6px', borderRadius: 4, display: 'inline-block',
                   }}>
@@ -470,7 +470,7 @@ export default function CryptoTab() {
               <div style={{ marginTop: 10, height: 6, borderRadius: 3, background: 'var(--border)', overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', borderRadius: 3, width: `${fearGreed.value}%`,
-                  background: `linear-gradient(90deg, #C0392B, #E67E22, #F1C40F, #27AE60, #0A7C5C)`,
+                  background: `linear-gradient(90deg, #EF4444, #E67E22, #F1C40F, #27AE60, #0A7C5C)`,
                 }} />
               </div>
             </div>

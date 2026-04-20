@@ -44,7 +44,7 @@ export default function ChartDragOverlay({ children, data, dataKey = 'close', he
   const diff = startVal != null && endVal != null ? endVal - startVal : null
   const diffPct = diff != null && startVal > 0 ? (diff / startVal) * 100 : null
   const isUp = (diff ?? 0) >= 0
-  const color = isUp ? '#0A7C5C' : '#C0392B'
+  const color = isUp ? '#0A7C5C' : '#EF4444'
   const bgTint = isUp ? 'rgba(10,124,92,0.06)' : 'rgba(192,57,43,0.06)'
 
   const rect = containerRef.current?.getBoundingClientRect()

@@ -11,7 +11,7 @@ export default function ErrorRetry({ message, onRetry, compact = false }) {
         background: 'var(--bg-muted)', fontSize: 12,
         color: 'var(--text-secondary)',
       }}>
-        <span style={{ color: '#C0392B' }}>⚠</span>
+        <span style={{ color: '#EF4444' }}>⚠</span>
         <span>{message || 'Failed to load'}</span>
         {onRetry && (
           <button

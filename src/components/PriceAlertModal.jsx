@@ -71,7 +71,7 @@ export default function PriceAlertModal({ symbol, name, currentPrice, onClose, o
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>{name}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', fontFamily: 'Georgia, serif' }}>
+              <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.2px' }}>
                 ${currentPrice?.toFixed(2)}
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Current price</div>
@@ -86,7 +86,7 @@ export default function PriceAlertModal({ symbol, name, currentPrice, onClose, o
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               {[
                 { val: 'above', label: 'Above', icon: '↑', color: '#0A7C5C', bg: 'rgba(10,124,92,0.06)' },
-                { val: 'below', label: 'Below', icon: '↓', color: '#C0392B', bg: 'rgba(192,57,43,0.06)' },
+                { val: 'below', label: 'Below', icon: '↓', color: '#EF4444', bg: 'rgba(192,57,43,0.06)' },
               ].map(opt => (
                 <button key={opt.val} type="button" onClick={() => setDirection(opt.val)}
                   style={{
@@ -117,7 +117,7 @@ export default function PriceAlertModal({ symbol, name, currentPrice, onClose, o
             <div style={{ position: 'relative' }}>
               <span style={{
                 position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)',
-                fontSize: 18, color: 'var(--text-muted)', fontFamily: 'Georgia, serif',
+                fontSize: 18, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)',
               }}>$</span>
               <input
                 type="number" step="0.01" min="0.01" required
@@ -127,7 +127,7 @@ export default function PriceAlertModal({ symbol, name, currentPrice, onClose, o
                 style={{
                   width: '100%', padding: '14px 16px 14px 32px', borderRadius: 10,
                   border: '2px solid var(--border)', background: 'var(--bg-card)',
-                  color: 'var(--text)', fontSize: 20, fontFamily: 'Georgia, serif',
+                  color: 'var(--text)', fontSize: 20, fontFamily: 'var(--font-mono)',
                   fontWeight: 600, outline: 'none', boxSizing: 'border-box',
                   transition: 'border-color 0.15s',
                 }}
@@ -137,7 +137,7 @@ export default function PriceAlertModal({ symbol, name, currentPrice, onClose, o
             </div>
             {pctDiff != null && target > 0 && (
               <div style={{
-                fontSize: 12, marginTop: 6, color: pctDiff >= 0 ? '#0A7C5C' : '#C0392B', fontWeight: 500,
+                fontSize: 12, marginTop: 6, color: pctDiff >= 0 ? '#0A7C5C' : '#EF4444', fontWeight: 500,
               }}>
                 {pctDiff >= 0 ? '+' : ''}{pctDiff.toFixed(1)}% from current price
               </div>

@@ -34,7 +34,7 @@ export default function StockChart({ stock, history, stockCurrency = 'CAD' }) {
   }))
 
   const isUp = (stock?.change ?? 0) >= 0
-  const lineColor = isUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = isUp ? '#0A7C5C' : '#EF4444'
   const firstClose = convertedHistory[0]?.close
 
   return (

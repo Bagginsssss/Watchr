@@ -82,7 +82,7 @@ function StockPreview({ symbol, name, onResearch }) {
   const change = quote ? quote.price - quote.prevClose : null
   const changePct = change != null && quote?.prevClose ? (change / quote.prevClose) * 100 : null
   const isUp = (changePct ?? 0) >= 0
-  const lineColor = isUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = isUp ? '#0A7C5C' : '#EF4444'
 
   return (
     <div style={{ padding: '16px 20px' }}>
@@ -100,7 +100,7 @@ function StockPreview({ symbol, name, onResearch }) {
           <div className="skeleton" style={{ width: 80, height: 28, borderRadius: 4 }} />
         ) : quote && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-0.5px' }}>
+            <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.5px' }}>
               ${quote.price?.toFixed(2)}
             </div>
             {changePct != null && (
@@ -160,7 +160,7 @@ function StockPreview({ symbol, name, onResearch }) {
           ].map(s => (
             <div key={s.l}>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.l}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', fontFamily: 'Georgia, serif' }}>{s.v}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>{s.v}</div>
             </div>
           ))}
         </div>

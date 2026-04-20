@@ -18,8 +18,8 @@ function CandlestickShape(props) {
   if (open == null || close == null) return null
 
   const isUp = close >= open
-  const fill = isUp ? '#0A7C5C' : '#C0392B'
-  const stroke = isUp ? '#0D9668' : '#E74C3C'
+  const fill = isUp ? '#0A7C5C' : '#EF4444'
+  const stroke = isUp ? '#22C55E' : '#EF4444'
 
   // Y-axis mapping: bar's y and height correspond to the "bar" value range
   // We need to calculate proper positions using the Y scale
@@ -67,7 +67,7 @@ function CandleTooltip({ active, payload, label, sym }) {
         <span>O:</span><span style={{ fontWeight: 500 }}>${d.open?.toFixed(2)}</span>
         <span>H:</span><span style={{ fontWeight: 500 }}>${d.high?.toFixed(2)}</span>
         <span>L:</span><span style={{ fontWeight: 500 }}>${d.low?.toFixed(2)}</span>
-        <span>C:</span><span style={{ fontWeight: 500, color: d.close >= d.open ? '#0A7C5C' : '#C0392B' }}>
+        <span>C:</span><span style={{ fontWeight: 500, color: d.close >= d.open ? '#0A7C5C' : '#EF4444' }}>
           ${d.close?.toFixed(2)}
         </span>
         {d.volume != null && (
@@ -162,7 +162,7 @@ export default function CandlestickChart({
             const d = props.payload
             if (!d?.open || !d?.close) return null
             const isUp = d.close >= d.open
-            const fill = isUp ? '#0A7C5C' : '#C0392B'
+            const fill = isUp ? '#0A7C5C' : '#EF4444'
             const { x, width } = props
 
             // Use the YAxis scale to compute pixel positions
@@ -210,8 +210,8 @@ export default function CandlestickChart({
             if (!scale) return null
 
             const isUp = d.close >= d.open
-            const fill = isUp ? '#0A7C5C' : '#C0392B'
-            const stroke = isUp ? '#0D9668' : '#E74C3C'
+            const fill = isUp ? '#0A7C5C' : '#EF4444'
+            const stroke = isUp ? '#22C55E' : '#EF4444'
 
             const bodyTop = scale(Math.max(d.open, d.close))
             const bodyBottom = scale(Math.min(d.open, d.close))

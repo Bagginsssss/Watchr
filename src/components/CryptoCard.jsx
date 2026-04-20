@@ -98,19 +98,19 @@ export default memo(function CryptoCard({ coin, selected, onClick }) {
       {/* Price */}
       <div style={{ textAlign: 'right', minWidth: 80 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{fmt(displayPrice)}</div>
-        <div style={{ fontSize: 11, color: isUp24 ? '#0A7C5C' : '#C0392B' }}>
+        <div style={{ fontSize: 11, color: isUp24 ? '#0A7C5C' : '#EF4444' }}>
           {isUp24 ? '+' : ''}{pct24h.toFixed(2)}%
         </div>
       </div>
 
       {/* 7d % */}
-      <div style={{ textAlign: 'right', minWidth: 52, fontSize: 12, color: isUp7d ? '#0A7C5C' : '#C0392B' }}>
+      <div style={{ textAlign: 'right', minWidth: 52, fontSize: 12, color: isUp7d ? '#0A7C5C' : '#EF4444' }}>
         {pct7d != null ? `${isUp7d ? '+' : ''}${pct7d.toFixed(1)}%` : '—'}
         <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 400 }}>7d</div>
       </div>
 
       {/* Sparkline */}
-      <Sparkline data={sparkData} color={isUp7d ? '#0A7C5C' : '#C0392B'} />
+      <Sparkline data={sparkData} color={isUp7d ? '#0A7C5C' : '#EF4444'} />
     </div>
   )
 })

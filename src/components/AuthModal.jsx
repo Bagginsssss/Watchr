@@ -96,7 +96,7 @@ export default function AuthModal({ onClose }) {
         }}
       >
         <div className="sheet-handle" />
-        <div style={{ fontSize: 22, fontWeight: 300, color: 'var(--text)', marginBottom: 6, fontFamily: 'Georgia, serif', letterSpacing: '-0.5px' }}>
+        <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', marginBottom: 6, letterSpacing: '-0.4px' }}>
           {mode === 'signin' ? 'Sign In' : 'Create Account'}
         </div>
         <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 32 }}>

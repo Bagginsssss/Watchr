@@ -9,7 +9,7 @@ export default memo(function StockCard({ stock, selected, onClick, rank, logoUrl
   const { convert, sym } = useCurrency()
   const { symbol, name, price, changePct, currency, sector, loading, error } = stock
   const isUp = (changePct ?? 0) >= 0
-  const changeColor = isUp ? '#0A7C5C' : '#C0392B'
+  const changeColor = isUp ? '#0A7C5C' : '#EF4444'
   const displaySymbol = symbol.replace('.TO', '').replace('.V', '').replace('-B', ' B').replace('.NE', '')
   const displayPrice = convert(price, currency)
 

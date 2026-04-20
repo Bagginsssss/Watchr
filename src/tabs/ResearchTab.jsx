@@ -272,7 +272,7 @@ function FinancialsTab({ fundamentals, loading }) {
                   <div key={i} style={{ padding: '10px 14px', textAlign: 'right' }}>
                     <div style={{ fontSize: 13, color: v == null ? 'var(--text-muted)' : 'var(--text)' }}>{fmtV(v)}</div>
                     {i < cols - 1 && chg != null && (
-                      <div style={{ fontSize: 11, color: bad ? '#C0392B' : good ? '#0A7C5C' : 'var(--text-secondary)', marginTop: 1 }}>
+                      <div style={{ fontSize: 11, color: bad ? '#EF4444' : good ? '#0A7C5C' : 'var(--text-secondary)', marginTop: 1 }}>
                         {chg >= 0 ? '+' : ''}{chg.toFixed(1)}%
                       </div>
                     )}
@@ -382,7 +382,7 @@ function NewsTab({ news, loading }) {
 function RedditTab({ symbol }) {
   const clean = (symbol ?? '').replace(/\.(TO|NE|V|CN)$/i, '').split('.')[0].toUpperCase()
   const cards = [
-    { sub: 'r/wallstreetbets', color: '#C0392B', desc: 'High-conviction trades, options plays, and meme stock discussion.' },
+    { sub: 'r/wallstreetbets', color: '#EF4444', desc: 'High-conviction trades, options plays, and meme stock discussion.' },
     { sub: 'r/stocks',         color: 'var(--text)', desc: 'In-depth DD, fundamentals, and long-term investment discussion.' },
     { sub: 'r/investing',      color: '#0A7C5C', desc: 'Conservative strategies, index funds, and wealth-building.' },
     { sub: 'r/SecurityAnalysis', color: '#B8860B', desc: 'Professional-grade analysis, valuations, and earnings deep-dives.' },
@@ -443,7 +443,7 @@ function AnalystTab({ fundamentals, metrics, loading }) {
   const strongSell = trend.strongSell ?? 0
   const total      = strongBuy + buy + hold + sell + strongSell
 
-  const REC_COLOR = { 'STRONG BUY': '#0A7C5C', BUY: '#0A7C5C', HOLD: '#B8860B', SELL: '#C0392B', 'STRONG SELL': '#C0392B', OUTPERFORM: '#0A7C5C', UNDERPERFORM: '#C0392B', OVERWEIGHT: '#0A7C5C', UNDERWEIGHT: '#C0392B', NEUTRAL: 'var(--text-secondary)' }
+  const REC_COLOR = { 'STRONG BUY': '#0A7C5C', BUY: '#0A7C5C', HOLD: '#B8860B', SELL: '#EF4444', 'STRONG SELL': '#EF4444', OUTPERFORM: '#0A7C5C', UNDERPERFORM: '#EF4444', OVERWEIGHT: '#0A7C5C', UNDERWEIGHT: '#EF4444', NEUTRAL: 'var(--text-secondary)' }
   const recColor = rec ? (REC_COLOR[rec] ?? 'var(--text-secondary)') : 'var(--text-secondary)'
 
   return (
@@ -452,20 +452,20 @@ function AnalystTab({ fundamentals, metrics, loading }) {
       <div className="research-analyst-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '20px 24px' }}>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Consensus Rating</div>
-          <div style={{ fontSize: 28, fontWeight: 300, fontFamily: 'Georgia, serif', color: recColor, marginBottom: 4 }}>{rec ?? '—'}</div>
+          <div style={{ fontSize: 28, fontWeight: 600, color: recColor, marginBottom: 4, letterSpacing: '-0.5px' }}>{rec ?? '—'}</div>
           {total > 0 && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Based on {total} analyst{total !== 1 ? 's' : ''}</div>}
         </div>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '20px 24px' }}>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 14 }}>Price Targets</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             {[
-              { label: 'Low',  val: targetLow,  color: '#C0392B' },
+              { label: 'Low',  val: targetLow,  color: '#EF4444' },
               { label: 'Mean', val: targetMean, color: 'var(--text)', big: true },
               { label: 'High', val: targetHigh, color: '#0A7C5C' },
             ].map(({ label, val, color, big }) => (
               <div key={label} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: big ? 24 : 18, fontWeight: 300, fontFamily: 'Georgia, serif', color }}>
+                <div style={{ fontSize: big ? 24 : 18, fontWeight: big ? 600 : 500, fontFamily: 'var(--font-mono)', color, letterSpacing: '-0.3px' }}>
                   {val != null ? `$${val.toFixed(2)}` : '—'}
                 </div>
               </div>
@@ -481,7 +481,7 @@ function AnalystTab({ fundamentals, metrics, loading }) {
             { label: 'Strong Buy',  count: strongBuy,  color: '#0A7C5C' },
             { label: 'Buy',         count: buy,         color: '#34A47C' },
             { label: 'Hold',        count: hold,        color: '#B8860B' },
-            { label: 'Sell',        count: sell,        color: '#C0392B' },
+            { label: 'Sell',        count: sell,        color: '#EF4444' },
             { label: 'Strong Sell', count: strongSell,  color: '#A02020' },
           ].map(({ label, count, color }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -501,7 +501,7 @@ function AnalystTab({ fundamentals, metrics, loading }) {
           {history.map((h, i) => {
             const isUp   = h.action === 'up'
             const isInit = !['up', 'down'].includes(h.action)
-            const clr    = isUp ? '#0A7C5C' : isInit ? 'var(--text-secondary)' : '#C0392B'
+            const clr    = isUp ? '#0A7C5C' : isInit ? 'var(--text-secondary)' : '#EF4444'
             const date   = h.epochGradeDate ? new Date(h.epochGradeDate * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—'
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < history.length - 1 ? '1px solid var(--border)' : 'none' }}>
@@ -685,7 +685,7 @@ function ChartTab({ symbol }) {
   const change = firstClose && lastClose ? lastClose - firstClose : null
   const changePct = change != null && firstClose > 0 ? (change / firstClose) * 100 : null
   const isUp = (change ?? 0) >= 0
-  const lineColor = isUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = isUp ? '#0A7C5C' : '#EF4444'
   const maxVol = Math.max(...chartData.map(d => d.volume || 0), 1)
   const lastRSI = chartData.filter(d => d.rsi != null).slice(-1)[0]?.rsi
   const avgVol = chartData.length > 0 ? chartData.reduce((s, d) => s + (d.volume || 0), 0) / chartData.length : 0
@@ -709,12 +709,12 @@ function ChartTab({ symbol }) {
   const fmtVol = v => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}K` : Math.round(v).toLocaleString()
 
   const metrics = [
-    { label: 'Period Change', val: change != null ? `${isUp ? '+' : ''}$${Math.abs(change).toFixed(2)}` : '—', color: isUp ? '#0A7C5C' : '#C0392B' },
-    { label: 'Change %', val: changePct != null ? `${isUp ? '+' : ''}${changePct.toFixed(2)}%` : '—', color: isUp ? '#0A7C5C' : '#C0392B' },
-    { label: 'RSI (14)', val: lastRSI != null ? lastRSI.toFixed(1) : '—', color: lastRSI > 70 ? '#C0392B' : lastRSI < 30 ? '#0A7C5C' : 'var(--text)' },
+    { label: 'Period Change', val: change != null ? `${isUp ? '+' : ''}$${Math.abs(change).toFixed(2)}` : '—', color: isUp ? '#0A7C5C' : '#EF4444' },
+    { label: 'Change %', val: changePct != null ? `${isUp ? '+' : ''}${changePct.toFixed(2)}%` : '—', color: isUp ? '#0A7C5C' : '#EF4444' },
+    { label: 'RSI (14)', val: lastRSI != null ? lastRSI.toFixed(1) : '—', color: lastRSI > 70 ? '#EF4444' : lastRSI < 30 ? '#0A7C5C' : 'var(--text)' },
     { label: 'ATR (14)', val: lastATR != null ? `$${lastATR.toFixed(2)}` : '—', color: 'var(--text)' },
-    { label: 'BB %B', val: bbPercentB != null ? `${bbPercentB}%` : '—', color: bbPercentB > 100 ? '#C0392B' : bbPercentB < 0 ? '#0A7C5C' : 'var(--text)' },
-    { label: 'MACD', val: lastMACD?.macd != null ? lastMACD.macd.toFixed(3) : '—', color: lastMACD?.macd >= 0 ? '#0A7C5C' : '#C0392B' },
+    { label: 'BB %B', val: bbPercentB != null ? `${bbPercentB}%` : '—', color: bbPercentB > 100 ? '#EF4444' : bbPercentB < 0 ? '#0A7C5C' : 'var(--text)' },
+    { label: 'MACD', val: lastMACD?.macd != null ? lastMACD.macd.toFixed(3) : '—', color: lastMACD?.macd >= 0 ? '#0A7C5C' : '#EF4444' },
     { label: 'High', val: dayHigh > 0 ? `$${dayHigh.toFixed(2)}` : '—', color: 'var(--text)' },
     { label: 'Low', val: dayLow < Infinity ? `$${dayLow.toFixed(2)}` : '—', color: 'var(--text)' },
     { label: 'Range Pos.', val: rangePosn != null ? `${rangePosn}%` : '—', color: 'var(--text)' },
@@ -878,7 +878,7 @@ function ChartTab({ symbol }) {
               <LineChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
                 <XAxis dataKey="date" tick={false} tickLine={false} axisLine={false} />
                 <YAxis domain={[0, 100]} ticks={[30, 50, 70]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} tickLine={false} axisLine={false} width={52} />
-                <ReferenceLine y={70} stroke="#C0392B" strokeDasharray="3 3" strokeOpacity={0.4} />
+                <ReferenceLine y={70} stroke="#EF4444" strokeDasharray="3 3" strokeOpacity={0.4} />
                 <ReferenceLine y={30} stroke="#0A7C5C" strokeDasharray="3 3" strokeOpacity={0.4} />
                 <Tooltip
                   contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 11 }}
@@ -1130,7 +1130,7 @@ export default function ResearchTab() {
           )}
         </div>
         {error && (
-          <div style={{ fontSize: 13, color: '#C0392B', background: '#FDF3F2', borderRadius: 4, padding: '10px 14px', marginTop: 8 }}>{error}</div>
+          <div style={{ fontSize: 13, color: '#EF4444', background: '#FDF3F2', borderRadius: 4, padding: '10px 14px', marginTop: 8 }}>{error}</div>
         )}
       </div>
 
@@ -1141,7 +1141,7 @@ export default function ResearchTab() {
             <ResearchLogo symbol={symbol} name={quoteData.name} size={48} />
             <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 22, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-0.5px' }}>{quoteData.name}</span>
+              <span style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.4px' }}>{quoteData.name}</span>
               <span style={{ fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-hover)', borderRadius: 4, padding: '2px 8px' }}>{symbol}</span>
               <span style={{ fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-hover)', borderRadius: 4, padding: '2px 8px' }}>{quoteData.exchange}</span>
               <span style={{ fontSize: 11, color: quoteData.marketState === 'REGULAR' ? '#0A7C5C' : 'var(--text-muted)' }}>
@@ -1149,8 +1149,8 @@ export default function ResearchTab() {
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 32, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-1px' }}>${quoteData.price?.toFixed(2)}</span>
-              <span style={{ fontSize: 14, color: isUp ? '#0A7C5C' : '#C0392B' }}>
+              <span style={{ fontSize: 32, fontWeight: 500, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.8px' }}>${quoteData.price?.toFixed(2)}</span>
+              <span style={{ fontSize: 14, color: isUp ? '#0A7C5C' : '#EF4444' }}>
                 {isUp ? '+' : ''}{quoteData.change?.toFixed(2)}&nbsp;({isUp ? '+' : ''}{quoteData.changePct?.toFixed(2)}%)
               </span>
             </div>
@@ -1242,7 +1242,7 @@ export default function ResearchTab() {
       {/* Empty state */}
       {!symbol && !loading && (
         <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <div style={{ fontSize: 18, fontWeight: 300, color: 'var(--text)', marginBottom: 10, fontFamily: 'Georgia, serif' }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', marginBottom: 10, letterSpacing: '-0.3px' }}>
             Stock Research
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7, maxWidth: 400, margin: '0 auto 28px' }}>
@@ -1275,7 +1275,7 @@ export default function ResearchTab() {
                     background: 'none', border: 'none', fontSize: 11, color: 'var(--text-muted)',
                     cursor: 'pointer', padding: '2px 6px',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#C0392B'}
+                  onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
                   onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
                 >Clear All</button>
               </div>

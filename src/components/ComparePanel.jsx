@@ -205,7 +205,7 @@ export default function ComparePanel({ symbols, onClose }) {
                   {symbols.map(sym => {
                     const m = metricsMap[sym]
                     return (
-                      <td key={sym} style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 500, color: 'var(--text)', fontFamily: 'Georgia, serif' }}>
+                      <td key={sym} style={{ textAlign: 'right', padding: '8px 12px', fontWeight: 500, color: 'var(--text)', fontFamily: 'var(--font-mono)' }}>
                         {m ? row.fmt(m[row.key]) : '—'}
                       </td>
                     )

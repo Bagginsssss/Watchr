@@ -40,7 +40,7 @@ function StatusBadge({ status }) {
   const styles = {
     validating: { bg: '#F59E0B22', color: '#F59E0B', text: '...' },
     valid:      { bg: '#0A7C5C22', color: '#0A7C5C', text: '✓' },
-    invalid:    { bg: '#C0392B22', color: '#C0392B', text: '✕' },
+    invalid:    { bg: '#EF444422', color: '#EF4444', text: '✕' },
   }
   const s = styles[status] || styles.validating
   return (
@@ -226,7 +226,7 @@ export default function PortfolioImportModal({ onClose, onImport }) {
             <div style={{
               padding: '10px 14px', borderRadius: 8, marginBottom: 16,
               background: 'rgba(192,57,43,0.08)', border: '1px solid rgba(192,57,43,0.2)',
-              color: '#C0392B', fontSize: 13,
+              color: '#EF4444', fontSize: 13,
             }}>
               {error}
             </div>

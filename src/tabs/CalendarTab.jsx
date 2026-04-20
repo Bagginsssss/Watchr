@@ -376,7 +376,7 @@ function EventCard({ event, isDark }) {
       {/* Expected payout — right side, prominent */}
       {event.type === 'dividend' && event.shares > 0 && event.expectedPayout > 0 && (
         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#0A7C5C', fontFamily: 'Georgia, serif' }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--brand)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.2px' }}>
             ${event.expectedPayout.toFixed(2)}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{event.shares} shares</div>
@@ -925,7 +925,7 @@ export default function CalendarTab({ user }) {
                       {/* Expected payout — big and prominent */}
                       {isDividend && event.shares > 0 ? (
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 700, color: '#0A7C5C', fontFamily: 'Georgia, serif' }}>
+                          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--brand)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.2px' }}>
                             ${event.expectedPayout?.toFixed(2)}
                           </div>
                           <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{event.shares} shares</div>

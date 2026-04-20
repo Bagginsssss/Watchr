@@ -27,7 +27,7 @@ function symbolCurrency(symbol) {
 }
 
 const PIE_COLORS = [
-  '#0A7C5C', '#3A5A8A', '#D97706', '#C0392B', '#7A4040',
+  '#0A7C5C', '#3A5A8A', '#D97706', '#EF4444', '#7A4040',
   '#2D6A4F', '#EA580C', '#6B4F8A', '#0891B2', '#BE185D',
   '#65A30D', '#8B6914', '#0284C7', '#B45309', '#5A3080',
 ]
@@ -378,7 +378,7 @@ function PortfolioChart({ holdings, convert, sym, customGroups, customAssignment
   const change = (firstClose && lastClose) ? lastClose - firstClose : null
   const changePct = (change != null && firstClose > 0) ? (change / firstClose) * 100 : null
   const isUp = (change ?? 0) >= 0
-  const lineColor = isUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = isUp ? '#0A7C5C' : '#EF4444'
   const gradientId = 'portfolioGrad'
 
   return (
@@ -575,7 +575,7 @@ export function StockLookup() {
   const change = firstClose && lastClose ? lastClose - firstClose : null
   const changePct = change != null && firstClose > 0 ? (change / firstClose) * 100 : null
   const isUp = (change ?? 0) >= 0
-  const lineColor = isUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = isUp ? '#0A7C5C' : '#EF4444'
 
   const stats = metrics ? [
     { label: 'Market Cap', val: fmtMktCap(metrics.marketCap) },
@@ -664,12 +664,12 @@ export function StockLookup() {
                       <span style={{ fontSize: 10, color: 'var(--text-secondary)', background: 'var(--bg-hover)', borderRadius: 3, padding: '1px 6px' }}>{symbol}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 20, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif' }}>
+                      <span style={{ fontSize: 20, fontWeight: 500, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.3px' }}>
                         ${price?.toFixed(2)}
                       </span>
                       {change != null && (
                         <span style={{
-                          fontSize: 12, fontWeight: 500, color: isUp ? '#0A7C5C' : '#C0392B',
+                          fontSize: 12, fontWeight: 500, color: isUp ? '#0A7C5C' : '#EF4444',
                           background: isUp ? 'rgba(10,124,92,0.08)' : 'rgba(192,57,43,0.08)',
                           padding: '2px 6px', borderRadius: 4,
                         }}>
@@ -1097,14 +1097,14 @@ create policy "Users manage own holdings"
           {
             label: 'Total Gain / Loss',
             val: totalGain != null ? `${isUp?'+':''}${sym}${Math.abs(totalGain).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
-            color: totalGain != null ? (isUp ? '#0A7C5C' : '#C0392B') : 'var(--text-muted)',
-            icon: isUp ? '\uD83D\uDCC8' : '\uD83D\uDCC9', accent: isUp ? '#0A7C5C' : '#C0392B',
+            color: totalGain != null ? (isUp ? '#0A7C5C' : '#EF4444') : 'var(--text-muted)',
+            icon: isUp ? '\uD83D\uDCC8' : '\uD83D\uDCC9', accent: isUp ? '#0A7C5C' : '#EF4444',
           },
           {
             label: 'Return',
             val: totalGainPct != null ? `${isUp?'+':''}${totalGainPct.toFixed(2)}%` : '—',
-            color: totalGainPct != null ? (isUp ? '#0A7C5C' : '#C0392B') : 'var(--text-muted)',
-            icon: '\u26A1', accent: totalGainPct != null ? (isUp ? '#0A7C5C' : '#C0392B') : 'var(--text-muted)',
+            color: totalGainPct != null ? (isUp ? '#0A7C5C' : '#EF4444') : 'var(--text-muted)',
+            icon: '\u26A1', accent: totalGainPct != null ? (isUp ? '#0A7C5C' : '#EF4444') : 'var(--text-muted)',
           },
         ].map(({ label, val, color, icon, accent }) => (
           <div key={label} style={{
@@ -1438,7 +1438,7 @@ create policy "Users manage own holdings"
                       )}
                       {!collapsedGroups[cat] && groupRows.map((r) => {
                         const isRowUp = (r.gain ?? 0) >= 0
-                        const glColor = r.gain == null ? 'var(--text-muted)' : isRowUp ? '#0A7C5C' : '#C0392B'
+                        const glColor = r.gain == null ? 'var(--text-muted)' : isRowUp ? '#0A7C5C' : '#EF4444'
                         const isCompareSelected = compareSymbols.includes(r.symbol)
                         return (
                           <tr key={r.id}
@@ -1522,7 +1522,7 @@ create policy "Users manage own holdings"
                                     color: 'var(--text-muted)', fontSize: 12, padding: '4px 8px', cursor: 'pointer',
                                     borderRadius: 6, transition: 'all 0.15s',
                                   }}
-                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(192,57,43,0.08)'; e.currentTarget.style.color = '#C0392B' }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(192,57,43,0.08)'; e.currentTarget.style.color = '#EF4444' }}
                                   onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text-muted)' }}
                                 >
                                   &#10005;

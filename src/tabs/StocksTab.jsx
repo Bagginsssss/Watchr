@@ -39,7 +39,7 @@ const ChartTooltip = ({ active, payload, label, sym }) => {
 /* ── Mover Card (for top gainers/losers) ─────────────────────────── */
 function MoverCard({ stock, logoUrl, sparkData, sym, convert }) {
   const isUp = (stock.changePct ?? 0) >= 0
-  const color = isUp ? '#0A7C5C' : '#C0392B'
+  const color = isUp ? '#0A7C5C' : '#EF4444'
   const bgColor = isUp ? 'rgba(10, 124, 92, 0.04)' : 'rgba(192, 57, 43, 0.04)'
   const borderColor = isUp ? 'rgba(10, 124, 92, 0.15)' : 'rgba(192, 57, 43, 0.15)'
   const ds = displaySymbolText(stock.symbol)
@@ -78,7 +78,7 @@ function MoverCard({ stock, logoUrl, sparkData, sym, convert }) {
 function StockGridCard({ stock, logoUrl, sparkData, selected, onClick, sym, convert, onRemove }) {
   const [hovered, setHovered] = useState(false)
   const isUp = (stock.changePct ?? 0) >= 0
-  const color = isUp ? '#0A7C5C' : '#C0392B'
+  const color = isUp ? '#0A7C5C' : '#EF4444'
   const ds = displaySymbolText(stock.symbol)
   const displayPrice = convert(stock.price, stock.currency)
   const sc = getSectorColor(stock.sector)
@@ -113,7 +113,7 @@ function StockGridCard({ stock, logoUrl, sparkData, selected, onClick, sym, conv
             position: 'absolute', top: 8, right: 8, zIndex: 2,
             background: 'rgba(192,57,43,0.1)', border: 'none', borderRadius: 12,
             width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', fontSize: 11, color: '#C0392B', fontWeight: 700,
+            cursor: 'pointer', fontSize: 11, color: '#EF4444', fontWeight: 700,
           }}
         >
           {'\u2715'}
@@ -151,7 +151,7 @@ function StockGridCard({ stock, logoUrl, sparkData, selected, onClick, sym, conv
           <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No data</div>
         ) : (
           <>
-            <div style={{ fontSize: 20, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-0.5px', lineHeight: 1 }}>
+            <div style={{ fontSize: 20, fontWeight: 500, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.4px', lineHeight: 1 }}>
               {sym}{displayPrice?.toFixed(2)}
             </div>
             <div style={{
@@ -189,7 +189,7 @@ function DetailPanel({ stock, logoUrl, history, historyLoading, metrics, metrics
   }))
 
   const chartIsUp = rangeChange != null ? rangeChange >= 0 : isUp
-  const lineColor = chartIsUp ? '#0A7C5C' : '#C0392B'
+  const lineColor = chartIsUp ? '#0A7C5C' : '#EF4444'
   const firstClose = convertedHistory[0]?.close
 
   return (
@@ -252,7 +252,7 @@ function DetailPanel({ stock, logoUrl, history, historyLoading, metrics, metrics
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
         <LogoAvatar symbol={ds} logoUrl={logoUrl} size={48} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 20, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-0.5px' }}>
+          <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.4px' }}>
             {stock.name}
           </div>
           <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
@@ -263,16 +263,16 @@ function DetailPanel({ stock, logoUrl, history, historyLoading, metrics, metrics
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 28, fontWeight: 300, color: 'var(--text)', fontFamily: 'Georgia, serif', letterSpacing: '-1px' }}>
+          <div style={{ fontSize: 28, fontWeight: 500, color: 'var(--text)', fontFamily: 'var(--font-mono)', letterSpacing: '-0.8px' }}>
             {sym}{displayPrice?.toFixed(2)}
           </div>
           {rangeChange != null && !historyLoading ? (
-            <div style={{ fontSize: 13, color: rangeChange >= 0 ? '#0A7C5C' : '#C0392B' }}>
+            <div style={{ fontSize: 13, color: rangeChange >= 0 ? '#0A7C5C' : '#EF4444' }}>
               {rangeChange >= 0 ? '+' : ''}{sym}{Math.abs(convert(rangeChange, stockCurrency) ?? 0).toFixed(2)} ({rangeChangePct >= 0 ? '+' : ''}{rangeChangePct?.toFixed(2)}%)
               <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 6, textTransform: 'uppercase' }}>Past {range.label}</span>
             </div>
           ) : (
-            <div style={{ fontSize: 13, color: isUp ? '#0A7C5C' : '#C0392B' }}>
+            <div style={{ fontSize: 13, color: isUp ? '#0A7C5C' : '#EF4444' }}>
               {isUp ? '+' : ''}{stock.changePct?.toFixed(2)}%
             </div>
           )}
@@ -776,8 +776,8 @@ export default function StocksTab({ user, username, onRequestAuth, onCreateAlert
                   style={{
                     fontSize: 11, fontWeight: 500,
                     padding: '3px 10px', borderRadius: 20, cursor: 'pointer',
-                    background: sectorFilter === sector ? (isUp ? '#0A7C5C' : '#C0392B') : (isUp ? 'rgba(10,124,92,0.08)' : 'rgba(192,57,43,0.08)'),
-                    color: sectorFilter === sector ? '#FFF' : (isUp ? '#0A7C5C' : '#C0392B'),
+                    background: sectorFilter === sector ? (isUp ? '#0A7C5C' : '#EF4444') : (isUp ? 'rgba(10,124,92,0.08)' : 'rgba(192,57,43,0.08)'),
+                    color: sectorFilter === sector ? '#FFF' : (isUp ? '#0A7C5C' : '#EF4444'),
                     transition: 'all 0.2s',
                     whiteSpace: 'nowrap',
                   }}
@@ -839,8 +839,8 @@ export default function StocksTab({ user, username, onRequestAuth, onCreateAlert
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: '#C0392B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 12 12" style={{ transform: 'rotate(180deg)' }}><path d="M6 2L10 8H2L6 2Z" fill="#C0392B" /></svg>
+              <div style={{ fontSize: 11, color: '#EF4444', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" style={{ transform: 'rotate(180deg)' }}><path d="M6 2L10 8H2L6 2Z" fill="#EF4444" /></svg>
                 Top Losers
               </div>
               <div className="mover-cards" style={{ display: 'flex', gap: 10 }}>

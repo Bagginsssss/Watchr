@@ -33,21 +33,20 @@ export default function MarketBar() {
 
   function renderItem(idx, i) {
     const isUp = (idx.changePct ?? 0) >= 0
-    const changeColor = isUp ? '#0A7C5C' : '#EF4444'
     return (
       <div
         key={`${idx.symbol}-${i}`}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 8,
-          padding: '0 24px',
+          gap: 10,
+          padding: '0 20px',
           fontSize: 12,
           whiteSpace: 'nowrap',
           flexShrink: 0,
         }}
       >
-        <span style={{ color: 'var(--text-muted)', fontWeight: 400, letterSpacing: 0.5, fontSize: 11, textTransform: 'uppercase' }}>
+        <span style={{ color: 'var(--text-muted)', fontWeight: 500, letterSpacing: 0.6, fontSize: 10, textTransform: 'uppercase' }}>
           {idx.name}
         </span>
         {idx.loading ? (
@@ -56,19 +55,19 @@ export default function MarketBar() {
           <span style={{ color: 'var(--text-muted)' }}>—</span>
         ) : (
           <>
-            <span style={{ color: 'var(--text)', fontWeight: 500 }}>
+            <span style={{ color: 'var(--text)', fontWeight: 600, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.2px' }}>
               {idx.isFx
                 ? idx.price?.toFixed(4)
                 : idx.price >= 1000
                   ? idx.price?.toLocaleString('en-CA', { maximumFractionDigits: 2 })
                   : idx.price?.toFixed(2)}
             </span>
-            <span style={{ color: changeColor, fontWeight: 400 }}>
+            <span className={`pct-pill ${isUp ? 'up' : 'down'}`} style={{ fontSize: 11, padding: '1px 6px' }}>
               {isUp ? '+' : ''}{idx.changePct?.toFixed(2)}%
             </span>
           </>
         )}
-        <span style={{ color: 'var(--border)', margin: '0 4px' }}>|</span>
+        <span style={{ color: 'var(--border)', marginLeft: 8 }}>·</span>
       </div>
     )
   }

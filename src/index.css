@@ -987,3 +987,298 @@ tr.hoverable:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   POLISH LAYER — Pass 2/3/4
+   Rhythm (spacing/radius/ease), interactions, skeletons,
+   empty states, focus rings, tooltips, directional sparkline.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Focus rings — accessibility + polish ────────────────────────── */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--brand) !important;
+  transition: box-shadow 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+
+/* Skip focus ring on pure click (only show on keyboard nav) handled by :focus-visible */
+
+/* ── Skeleton loader — refined ───────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-muted) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s var(--ease) infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton height/width helpers */
+.skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  display: block;
+}
+.skeleton-line-sm { height: 10px; }
+.skeleton-line-lg { height: 20px; }
+.skeleton-circle {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+/* ── Card surface — the core "tile" look ─────────────────────────── */
+.surface {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.2s var(--ease);
+}
+.surface-sm { padding: 16px; border-radius: var(--radius-sm); }
+.surface-lg { padding: 24px; border-radius: var(--radius-lg); }
+
+.surface-hover {
+  cursor: pointer;
+}
+.surface-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .surface-hover:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.surface-hover:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+/* ── Card-hover — upgraded from simple border swap ───────────────── */
+.card-hover {
+  transition: transform 0.25s var(--ease), border-color 0.2s var(--ease), box-shadow 0.25s var(--ease);
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+[data-theme="dark"] .card-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Button primitives ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), background 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease);
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--brand-dark); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+}
+
+.btn-sm { height: 32px; padding: 0 14px; font-size: 12px; }
+.btn-lg { height: 48px; padding: 0 24px; font-size: 14px; }
+
+/* ── Directional pills (gain / loss) ─────────────────────────────── */
+.pct-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+}
+.pct-pill.up {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.pct-pill.down {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* ── Sparkline directional glow ──────────────────────────────────── */
+.sparkline-up path {
+  filter: drop-shadow(0 1px 4px rgba(34, 197, 94, 0.35));
+}
+.sparkline-down path {
+  filter: drop-shadow(0 1px 4px rgba(239, 68, 68, 0.35));
+}
+
+/* ── Tooltip polish (Recharts overrides) ─────────────────────────── */
+.recharts-default-tooltip {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+  padding: 8px 12px !important;
+  font-family: var(--font-sans) !important;
+}
+.recharts-tooltip-label {
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+  margin-bottom: 4px !important;
+  font-weight: 500 !important;
+}
+.recharts-tooltip-item {
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+  padding: 2px 0 !important;
+}
+
+/* ── Nav-tabs — sliding underline ────────────────────────────────── */
+.nav-tabs button {
+  position: relative;
+  transition: color 0.2s var(--ease);
+}
+.nav-tabs button::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s var(--ease);
+  border-radius: 2px 2px 0 0;
+}
+.nav-tabs button[data-active="true"]::after {
+  transform: scaleX(1);
+}
+
+/* ── Empty state ────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 8px;
+}
+.empty-state-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--bg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.empty-state-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* ── Tab row hover ────────────────────────────────────────────────── */
+tr.hoverable {
+  transition: background 0.15s var(--ease);
+}
+
+/* ── Divider (subtle horizontal rule) ────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+  border: none;
+}
+
+/* ── Chip (ticker/sector/etc) ────────────────────────────────────── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+.chip-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Better global transitions (kill choppy 'ease') ───────────────── */
+.smooth {
+  transition-timing-function: var(--ease) !important;
+}
+
+/* ── Recharts axis polish ────────────────────────────────────────── */
+.recharts-cartesian-axis-tick-value {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── Prefers reduced motion — respect user settings ──────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -18,10 +18,17 @@ function SparklineInner({ data, width = 80, height = 32, color }) {
     }).join(' ')
 
     const isUp = closes[closes.length - 1] >= closes[0]
-    const stroke = color || (isUp ? '#0A7C5C' : '#EF4444')
+    const stroke = color || (isUp ? '#22C55E' : '#EF4444')
+    const glowClass = color ? '' : (isUp ? 'sparkline-up' : 'sparkline-down')
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className={glowClass}
+        style={{ display: 'block', overflow: 'visible' }}
+      >
         <polyline
           points={points}
           fill="none"

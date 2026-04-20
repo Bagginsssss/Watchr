@@ -159,19 +159,17 @@ function AppContent() {
               {TABS.map(tab => (
                 <button
                   key={tab.id}
+                  data-active={activeTab === tab.id}
                   onClick={() => switchTab(tab.id)}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    borderBottom: activeTab === tab.id ? '2px solid var(--text)' : '2px solid transparent',
+                    background: 'transparent',
+                    border: '1px solid transparent',
                     color: activeTab === tab.id ? 'var(--text)' : 'var(--text-secondary)',
                     fontSize: 13,
-                    fontWeight: activeTab === tab.id ? 500 : 400,
-                    padding: '0 12px',
+                    fontWeight: activeTab === tab.id ? 600 : 500,
+                    padding: '0 14px',
                     cursor: 'pointer',
                     height: 52,
-                    marginBottom: -1,
-                    transition: 'color 0.15s',
                     letterSpacing: '-0.1px',
                     whiteSpace: 'nowrap',
                   }}
@@ -304,21 +302,9 @@ function AppContent() {
               </div>
             ) : (
               <button
+                className="btn btn-primary smooth"
                 onClick={() => setShowAuth(true)}
-                style={{
-                  background: 'var(--text)',
-                  border: 'none',
-                  borderRadius: 4,
-                  color: 'var(--bg)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  padding: '0 24px',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s',
-                  height: 36,
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                style={{ height: 36 }}
               >
                 Sign In
               </button>

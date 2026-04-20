@@ -12,7 +12,11 @@ try {
     const eq = trimmed.indexOf('=')
     if (eq > 0) {
       const key = trimmed.slice(0, eq).trim()
-      const val = trimmed.slice(eq + 1).trim()
+      let val = trimmed.slice(eq + 1).trim()
+      // Strip matching surrounding quotes (dotenv convention)
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1)
+      }
       if (!process.env[key]) process.env[key] = val
     }
   }
